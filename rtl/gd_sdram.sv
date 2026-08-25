@@ -52,20 +52,23 @@ localparam logic [2:0] CMD_WRITE     = 3'b100;
 localparam logic [2:0] CMD_READ      = 3'b101;
 localparam logic [2:0] CMD_NOP       = 3'b111;
 
-// Burst length 4, sequential access, CAS 2, single-location write burst.
+// Burst length 4, sequential access, CAS 3, single-location write burst.
 // Graphics READs return one complete eight-byte row. Packed loader requests
 // are deliberately emitted as four independent ACTIVE/WRITE/auto-precharge
 // transactions below. This is slower than back-to-back WRITE commands under
 // one ACTIVE, but is portable across both plug-in MiSTer SDRAM modules and the
 // integrated BGA SDRAM used by MiSTer-compatible systems.
-// CAS 2 is the standard low-frequency MiSTer setting and removes one controller
-// clock from every graphics-cache miss at this core's 62.5 MHz SDRAM rate.
-localparam logic [12:0] MODE_REGISTER = 13'h222;
+// Keep CAS 3 here even at 62.5 MHz. The extra cycle provides the read margin
+// needed by both removable SDRAM modules and short-trace integrated BGA SDRAM.
+localparam logic [12:0] MODE_REGISTER = 13'h232;
 
 // The production core runs this controller at 62.5 MHz. The initialization
-// delay exceeds 100 us and the refresh cadence is below the required 7.8 us.
+// delay exceeds 100 us. Refresh normally starts at the soft threshold. A
+// pending scanline-critical DMA may cross that threshold, but never the hard
+// threshold; even a worst-case page change then completes inside 7.8 us.
 localparam logic [15:0] INIT_DELAY_CYCLES = 16'd24000;
-localparam logic [15:0] REFRESH_CYCLES    = 16'd440;
+localparam logic [15:0] REFRESH_SOFT_CYCLES = 16'd400;
+localparam logic [15:0] REFRESH_HARD_CYCLES = 16'd460;
 
 typedef enum logic [3:0]
 {
@@ -125,7 +128,7 @@ wire [24:0] video_dma_addr_sdr = video_dma_addr;
 logic  [5:0] dma_issued;
 logic  [5:0] dma_captured;
 logic [24:0] dma_address;
-logic  [3:0] dma_valid_pipe;
+logic  [4:0] dma_valid_pipe;
 logic        dma_burst_active;
 logic        row_open;
 logic  [1:0] open_bank;
@@ -215,7 +218,7 @@ always_ff @(posedge clk) begin
 		dma_issued    <= 6'd0;
 		dma_captured  <= 6'd0;
 		dma_address   <= 25'd0;
-		dma_valid_pipe <= 4'd0;
+		dma_valid_pipe <= 5'd0;
 		dma_burst_active <= 1'b0;
 		row_open      <= 1'b0;
 		open_bank     <= 2'd0;
@@ -304,7 +307,9 @@ always_ff @(posedge clk) begin
 					SDRAM_A  <= 13'd0;
 				end
 
-				if (refresh_count >= REFRESH_CYCLES) begin
+				if ((refresh_count >= REFRESH_HARD_CYCLES)
+				    || ((refresh_count >= REFRESH_SOFT_CYCLES)
+				        && (video_dma_req_sdr == video_dma_ack))) begin
 					refresh_count <= 16'd0;
 					if (row_open) begin
 						// An open graphics page must be closed before refresh.
@@ -322,7 +327,7 @@ always_ff @(posedge clk) begin
 				end
 				else if (video_dma_req_sdr != video_dma_ack) begin
 					dma_address <= video_dma_addr_sdr;
-					dma_valid_pipe <= 4'd0;
+					dma_valid_pipe <= 5'd0;
 					dma_burst_active <= 1'b0;
 					if (row_open
 					    && (open_bank == video_dma_addr_sdr[24:23])
@@ -402,10 +407,10 @@ always_ff @(posedge clk) begin
 
 					if (latched_rnw) begin
 						command      <= CMD_READ;
-						// CAS latency is two. Capture midway through the
-						// single data cycle, two clk rising edges after the
+						// CAS latency is three. Capture midway through the
+						// single data cycle, three clk rising edges after the
 						// SDRAM samples this command.
-						delay_count  <= 16'd3;
+						delay_count  <= 16'd4;
 						state        <= ST_READ_WAIT;
 					end
 					else begin
@@ -517,7 +522,7 @@ always_ff @(posedge clk) begin
 				else begin
 					dma_issued   <= 6'd0;
 					dma_captured <= 6'd0;
-					dma_valid_pipe <= 4'd0;
+					dma_valid_pipe <= 5'd0;
 					state <= ST_DMA_STREAM;
 				end
 			end
@@ -525,7 +530,7 @@ always_ff @(posedge clk) begin
 			ST_DMA_STREAM: begin
 				SDRAM_DQML <= 1'b0;
 				SDRAM_DQMH <= 1'b0;
-				dma_valid_pipe <= {dma_valid_pipe[2:0],
+				dma_valid_pipe <= {dma_valid_pipe[3:0],
 				                   (dma_issued == 6'd0)};
 
 				SDRAM_BA <= dma_address[24:23];
@@ -539,7 +544,7 @@ always_ff @(posedge clk) begin
 					dma_issued <= 6'd1;
 				end
 
-				if (dma_valid_pipe[3] || dma_burst_active) begin
+				if (dma_valid_pipe[4] || dma_burst_active) begin
 					video_dma_data[dma_captured[1:0] * 16 +: 16]
 						<= dq_capture;
 					if (dma_captured == 6'd3) begin

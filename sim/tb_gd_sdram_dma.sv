@@ -42,7 +42,7 @@ always #4.365 clk = ~clk;
 
 gd_sdram dut(.*);
 
-// Minimal CAS-2, burst-length-4 SDRAM read model. Commands are sampled on
+// Minimal CAS-3, burst-length-4 SDRAM read model. Commands are sampled on
 // the forwarded SDRAM clock and returned data is changed on that same edge,
 // leaving it centered around the controller's following clk rising edge.
 always @(posedge SDRAM_CLK) begin
@@ -58,7 +58,7 @@ always @(posedge SDRAM_CLK) begin
 		write_count = write_count + 1;
 	end
 	if ({SDRAM_nRAS, SDRAM_nCAS, SDRAM_nWE} == 3'b101) begin
-		read_delay = 2;
+		read_delay = 3;
 		burst_word = 0;
 	end
 	else if (read_delay > 1) begin
@@ -174,7 +174,48 @@ initial begin
 		$fatal(1, "packed write did not use four independent activations: %0d",
 		       write_activate_count);
 
-	$display("PASS gd_sdram open-page DMA and portable packed loader write first=%0d same-page=%0d different-page=%0d clocks",
+	// A video request at the soft refresh threshold wins one bounded slot. This
+	// moves refresh out of a scanline-critical cache miss without ever allowing
+	// the hard 7.8 us deadline to be crossed.
+	while (dut.state != 4'd5) @(posedge clk);
+	@(negedge clk);
+	dut.refresh_count = 16'd400;
+	video_dma_addr = 25'h0045600;
+	video_dma_req = ~video_dma_req;
+	@(posedge clk);
+	#1;
+	if ({SDRAM_nRAS, SDRAM_nCAS, SDRAM_nWE} !== 3'b011)
+		$fatal(1, "soft refresh threshold blocked pending DMA command=%b state=%0d",
+		       {SDRAM_nRAS, SDRAM_nCAS, SDRAM_nWE}, dut.state);
+	timeout = 0;
+	while ((video_dma_ack != video_dma_req) && timeout < 100) begin
+		@(posedge clk);
+		timeout = timeout + 1;
+	end
+	if (video_dma_ack != video_dma_req)
+		$fatal(1, "soft-threshold DMA timeout state=%0d", dut.state);
+
+	// Once the hard threshold is reached, refresh must win even with DMA pending.
+	// Wait for the soft-threshold transaction's deferred refresh to close its row.
+	while ((dut.state != 4'd5) || dut.row_open) @(posedge clk);
+	@(negedge clk);
+	dut.refresh_count = 16'd460;
+	video_dma_addr = 25'h0067800;
+	video_dma_req = ~video_dma_req;
+	@(posedge clk);
+	#1;
+	if ({SDRAM_nRAS, SDRAM_nCAS, SDRAM_nWE} !== 3'b001)
+		$fatal(1, "hard refresh threshold did not force refresh command=%b state=%0d",
+		       {SDRAM_nRAS, SDRAM_nCAS, SDRAM_nWE}, dut.state);
+	timeout = 0;
+	while ((video_dma_ack != video_dma_req) && timeout < 150) begin
+		@(posedge clk);
+		timeout = timeout + 1;
+	end
+	if (video_dma_ack != video_dma_req)
+		$fatal(1, "post-refresh DMA timeout state=%0d", dut.state);
+
+	$display("PASS gd_sdram CAS-3 open-page DMA, bounded refresh priority, and portable packed loader write first=%0d same-page=%0d different-page=%0d clocks",
 		first_timeout, same_page_timeout, different_page_timeout);
 	$finish;
 end
