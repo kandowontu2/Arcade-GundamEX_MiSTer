@@ -1,0 +1,65 @@
+<misterromdescription>
+  <name>Mobile Suit Gundam EX Revue</name>
+  <mratimestamp>202608242235</mratimestamp>
+  <mameversion>0287</mameversion>
+  <setname>gundamex</setname>
+  <year>1994</year>
+  <manufacturer>Banpresto</manufacturer>
+  <category>Fighter / 2.5D</category>
+  <rbf>GundamEX_20260824c</rbf>
+  <about author="OpenAI Codex and kandowontu" webpage="https://github.com/kandowontu/GundamEX_MiSTer" />
+  <buttons names="Attack 1,Attack 2,Attack 3,Attack 4,Start,Coin,Service" default="A,B,X,Y,Start,Select,R" />
+  <switches default="ff,ff" base="8">
+    <dip bits="0" name="Demo Sounds" ids="Off,On" />
+    <dip bits="1,2" name="Difficulty" ids="Hardest,Hard,Easy,Normal" />
+    <dip bits="4" name="Flip Screen" ids="On,Off" />
+    <dip bits="5" name="Freeze" ids="On,Off" />
+    <dip bits="6" name="Show Targets" ids="On,Off" />
+    <dip bits="7" name="Service Mode" ids="On,Off" />
+    <!-- The original PCB deliberately uses different rate tables for its two
+         physical coin chutes. These values follow the game program/board DIP
+         definitions; Coin B is not intended to duplicate Coin A. -->
+    <dip bits="8,9,10" name="Coin Chute A" ids="4C/1C,3C/1C,2C/1C,1C/4C,1C/5C,1C/3C,1C/2C,1C/1C" />
+    <dip bits="11,12,13" name="Coin Chute B" ids="3C/5C,2C/5C,2C/3C,1C/4C,1C/5C,1C/3C,1C/2C,1C/1C" />
+    <dip bits="14" name="Debug Mode" ids="On,Off" />
+    <dip bits="15" name="Free Play" ids="On,Off" />
+  </switches>
+  <rom index="0" zip="gundamex.zip" md5="7a00c81bc62e30a23a1fb8aa1cb788cc">
+    <!-- 2 MiB TMP68301 program, byte-interleaved big-endian. -->
+    <interleave output="16">
+      <part name="ka002002.u2" crc="e850f6d8" map="01" />
+      <part name="ka002004.u3" crc="c0fb1208" map="10" />
+    </interleave>
+    <interleave output="16">
+      <part name="ka002001.u4" crc="553ebe6b" map="01" />
+      <part name="ka002003.u5" crc="946185aa" map="10" />
+    </interleave>
+
+    <!-- Extra 512 KiB ROM mapped by the board at CPU address 0x500000. -->
+    <interleave output="16">
+      <part name="ka001005.u77" crc="f01d3d00" map="12" />
+    </interleave>
+
+    <!-- Three compact 48-bit X1-020 ROM banks. The FPGA loader inserts the
+         unpopulated fourth 16-bit lane as zero while writing SDRAM. -->
+    <interleave output="48">
+      <part name="ka001009.u16" crc="997d8d93" map="000021" />
+      <part name="ka001012.u15" crc="b789e4a8" map="002100" />
+      <part name="ka001006.u21" crc="6aac2f2f" map="210000" />
+    </interleave>
+    <interleave output="48">
+      <part name="ka001010.u18" crc="811b67ca" map="000021" />
+      <part name="ka001013.u17" crc="d8a0201f" map="002100" />
+      <part name="ka001007.u22" crc="588f9d63" map="210000" />
+    </interleave>
+    <interleave output="48">
+      <part name="ka001011.u20" crc="08a72700" map="000021" />
+      <part name="ka001014.u19" crc="7635e026" map="002100" />
+      <part name="ka001008.u23" crc="db55a60a" map="210000" />
+    </interleave>
+
+    <!-- 2 MiB X1-010 PCM sample ROM and 93C46 factory image. -->
+    <part name="ka001015.u28" crc="ada2843b" />
+    <part name="eeprom.bin" crc="80f8e248" />
+  </rom>
+</misterromdescription>
