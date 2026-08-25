@@ -70,6 +70,12 @@ The **Scandoubler Fx** setting leaves native 15-kHz analog RGB active when set
 to **None**. MiSTer's `forced_scandoubler=1` setting and the HQ2x/CRT choices
 produce scandoubled output where required.
 
+**Dither blend** is enabled by default. It averages only confirmed one-pixel
+A/B/A checkerboards, preventing the instruction artwork's intentional CRT
+dither from aliasing into wide vertical bands under non-integer HDMI scaling.
+Set it to **Off** for completely raw source pixels, including direct analogue
+setups where the display itself performs the blend.
+
 The **CRT Geometry** submenu provides signed H Size, H Offset, V Size, and V
 Offset controls. Leave the master switch **Off** for the untouched native
 stream. **PVM** V-size mode retimes line cadence while keeping every source
@@ -124,7 +130,8 @@ The focused RTL tests use Icarus Verilog 11 or newer:
 ./sim/run_unit_tests.ps1
 ```
 
-The suite covers analog conversion, DDR and SDRAM transfers, compact ROM
+The suite covers analog conversion, conditional HDMI dither blending, DDR and
+SDRAM transfers, compact ROM
 loading with missing-lane expansion, the 93C46 command interface, raster
 timing, raster interrupts, rowscroll replay, graphics arbitration, DX-101
 rendering, display-list buffering, and TMP68301 behavior. The ROM layout can

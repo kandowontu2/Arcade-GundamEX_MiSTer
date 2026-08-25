@@ -15,6 +15,12 @@ if ($LASTEXITCODE -ne 0) { throw 'Analog input unit-test compilation failed' }
 & $vvp $output
 if ($LASTEXITCODE -ne 0) { throw 'Analog input unit test failed' }
 
+$output = Join-Path $PSScriptRoot 'dither_blend.out'
+& $iverilog -g2012 -s tb_gd_dither_blend -o $output rtl/gd_dither_blend.sv sim/tb_gd_dither_blend.sv
+if ($LASTEXITCODE -ne 0) { throw 'Dither-blend unit-test compilation failed' }
+& $vvp $output
+if ($LASTEXITCODE -ne 0) { throw 'Dither-blend unit test failed' }
+
 $output = Join-Path $PSScriptRoot 'work_ram_cheats.out'
 & $iverilog -g2012 -s tb_gd_work_ram_cheats -o $output rtl/gd_work_ram_cheats.sv sim/tb_gd_work_ram_cheats.sv
 if ($LASTEXITCODE -ne 0) { throw 'Work-RAM cheat unit-test compilation failed' }

@@ -38,6 +38,7 @@ localparam CONF_STR = {
 	"P1O[3],Service / test menu,Off,On;",
 	"P1O[7],Language,English,Japanese;",
 	"P1O[9:8],CPU speed,Compensated 24.40 MHz,Native 16.27 MHz,Turbo 20.33 MHz,Turbo 30.00 MHz;",
+	"P1O[32],Dither blend,On,Off;",
 	"P1-;",
 	"O46,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%,CRT 75%;",
 	"P2,CRT Geometry;",
@@ -59,7 +60,7 @@ localparam CONF_STR = {
 	"R[0],Reset and close OSD;",
 	"J1,Attack 1,Attack 2,Attack 3,Attack 4,Start,Coin,Service;",
 	"jn,A,B,X,Y,Start,Select,R;",
-	"v,1.0.1-SS1-test;",
+	"v,1.0.1-SS1-test2;",
 	"V,v",`BUILD_DATE
 };
 
@@ -294,6 +295,21 @@ wire video_vsync = crt_geometry ? crt_out_vsync : vsync;
 wire video_hblank = crt_geometry ? crt_out_hblank : hblank;
 wire video_vblank = crt_geometry ? crt_out_vblank : vblank;
 
+// The instruction panels use a dense one-pixel checkerboard that a CRT blends
+// naturally. Keep one universal build for MiSTer and SuperStation One: digital
+// output defaults to a conditional A/B/A blend, with a raw-pixel opt-out for
+// users who prefer the unfiltered pattern (including direct analogue setups).
+wire [7:0] mixer_red;
+wire [7:0] mixer_green;
+wire [7:0] mixer_blue;
+gd_dither_blend dither_blend
+(
+	.clk(clk_sys), .reset, .ce_pix(video_ce), .enable(~status[32]),
+	.hblank(video_hblank), .vblank(video_vblank),
+	.red_in(video_red), .green_in(video_green), .blue_in(video_blue),
+	.red_out(mixer_red), .green_out(mixer_green), .blue_out(mixer_blue)
+);
+
 assign CLK_VIDEO = clk_sys;
 assign VGA_SL = scanline_level[1:0];
 
@@ -305,7 +321,7 @@ video_mixer #(.LINE_LENGTH(384), .HALF_DEPTH(0), .GAMMA(1)) video_out
 (
 	.CLK_VIDEO(clk_sys), .CE_PIXEL, .ce_pix(video_ce),
 	.scandoubler, .hq2x(video_fx == 3'd1), .gamma_bus,
-	.R(video_red), .G(video_green), .B(video_blue),
+	.R(mixer_red), .G(mixer_green), .B(mixer_blue),
 	.HSync(video_hsync), .VSync(video_vsync),
 	.HBlank(video_hblank), .VBlank(video_vblank),
 	.HDMI_FREEZE(1'b0), .freeze_sync(),

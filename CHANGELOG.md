@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.0.1 - Unreleased
+
+- Added a default-on, optional one-pixel dither blend that prevents the button
+  instruction screen's native checkerboard artwork from aliasing into broad
+  vertical bands on non-integer HDMI scaling. Raw pixels remain selectable for
+  direct analogue output.
+- Restored conservative CAS-3 graphics reads and bounded refresh priority for
+  compatibility with both standard MiSTer SDRAM modules and SuperStation One's
+  integrated BGA SDRAM.
+
 ## 1.0.0 - 2026-08-24
 
 - Changed the 62.5 MHz graphics SDRAM read path from CAS 3 to the standard

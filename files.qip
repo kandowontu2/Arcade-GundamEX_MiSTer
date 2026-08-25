@@ -2,6 +2,7 @@ set_global_assignment -name SYSTEMVERILOG_FILE rtl/pll.v
 set_global_assignment -name QIP_FILE rtl/pll.qip
 set_global_assignment -name SYSTEMVERILOG_FILE GundamEX.sv
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/gd_analog_to_digital.sv
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/gd_dither_blend.sv
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/crt_vsize.sv
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/crt_adjust.sv
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/gd_video_timing.sv
