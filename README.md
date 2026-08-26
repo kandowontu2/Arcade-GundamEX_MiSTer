@@ -70,11 +70,12 @@ The **Scandoubler Fx** setting leaves native 15-kHz analog RGB active when set
 to **None**. MiSTer's `forced_scandoubler=1` setting and the HQ2x/CRT choices
 produce scandoubled output where required.
 
-**Dither blend** is enabled by default. It averages only confirmed one-pixel
-A/B/A checkerboards, preventing the instruction artwork's intentional CRT
-dither from aliasing into wide vertical bands under non-integer HDMI scaling.
-Set it to **Off** for completely raw source pixels, including direct analogue
-setups where the display itself performs the blend.
+**HDMI dither blend** defaults to **Off** so CRT and direct-analogue output
+retain the raw arcade pixels. **Strict** mode requires a long one-pixel A/B run
+before averaging, preventing the instruction artwork's intentional CRT dither
+from aliasing into wide HDMI bands without altering short sprite details.
+**Strong** retains the earlier three-pixel detector for comparison and is not
+recommended for normal gameplay.
 
 The **CRT Geometry** submenu provides signed H Size, H Offset, V Size, and V
 Offset controls. Leave the master switch **Off** for the untouched native

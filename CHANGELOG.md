@@ -2,10 +2,10 @@
 
 ## 1.0.1 - Unreleased
 
-- Added a default-on, optional one-pixel dither blend that prevents the button
-  instruction screen's native checkerboard artwork from aliasing into broad
-  vertical bands on non-integer HDMI scaling. Raw pixels remain selectable for
-  direct analogue output.
+- Added an optional HDMI dither blend for the button instruction screen. Raw
+  pixels now remain the default for CRT/direct analogue output; Strict mode
+  requires a seven-pixel A/B run to avoid altering ordinary sprite art, while
+  Strong preserves the earlier three-pixel behavior for comparison.
 - Restored conservative CAS-3 graphics reads and bounded refresh priority for
   compatibility with both standard MiSTer SDRAM modules and SuperStation One's
   integrated BGA SDRAM.
