@@ -1,6 +1,6 @@
 <misterromdescription>
   <name>Mobile Suit Gundam EX Revue</name>
-  <mratimestamp>202608242235</mratimestamp>
+  <mratimestamp>202608250001</mratimestamp>
   <mameversion>0287</mameversion>
   <setname>gundamex</setname>
   <year>1994</year>
@@ -24,7 +24,7 @@
     <dip bits="14" name="Debug Mode" ids="On,Off" />
     <dip bits="15" name="Free Play" ids="On,Off" />
   </switches>
-  <rom index="0" zip="gundamex.zip" md5="7a00c81bc62e30a23a1fb8aa1cb788cc">
+  <rom index="0" zip="gundamex.zip" md5="3813ebb390c070149ae561b380b39c98">
     <!-- 2 MiB TMP68301 program, byte-interleaved big-endian. -->
     <interleave output="16">
       <part name="ka002002.u2" crc="e850f6d8" map="01" />
