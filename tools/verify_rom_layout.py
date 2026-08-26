@@ -96,10 +96,11 @@ def main() -> None:
     if args.write:
         args.write.write_bytes(image)
     print(f"size=0x{len(image):x}")
-    # MiSTer validates the final ROM image after applying MRA interleaving,
-    # swaps, repeats, and inline data. This is the value for <rom md5="...">.
-    print(f"mra_md5={hashlib.md5(image).hexdigest()}")
-    print(f"source_parts_md5={source_parts_md5(args.archive)}")
+    # Official MiSTer Main updates its MRA MD5 context from source-part bytes
+    # before rom_data() applies interleaving. Some Main variants have differed,
+    # so the release MRA relies on its per-part CRCs and uses md5="none".
+    print(f"stream_md5={hashlib.md5(image).hexdigest()}")
+    print(f"mister_source_md5={source_parts_md5(args.archive)}")
     print(f"sha256={hashlib.sha256(image).hexdigest()}")
 
 
