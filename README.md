@@ -70,12 +70,11 @@ The **Scandoubler Fx** setting leaves native 15-kHz analog RGB active when set
 to **None**. MiSTer's `forced_scandoubler=1` setting and the HQ2x/CRT choices
 produce scandoubled output where required.
 
-**Digital dither** defaults to **Safe**. It requires a long one-pixel A/B run
-before averaging, preventing the instruction artwork's intentional CRT dither
-from aliasing into wide bands under HDMI scaling without altering short sprite
-details. Select **Raw** for exact arcade pixels on CRT/direct video. **Strong**
-retains the earlier three-pixel detector for comparison and is not recommended
-for normal gameplay.
+The universal video path applies a conservative dither treatment that requires
+a long one-pixel A/B run before averaging. This prevents the instruction
+artwork's intentional CRT dither from aliasing into wide bands under HDMI
+scaling without altering short sprite details. It is deterministic and cannot
+be bypassed by status values saved from an older build.
 
 The **CRT Geometry** submenu provides signed H Size, H Offset, V Size, and V
 Offset controls. Leave the master switch **Off** for the untouched native
@@ -118,10 +117,10 @@ The project targets the Cyclone V `5CSEBA6U23I7` and Quartus Prime Lite 17.0:
 quartus_sh --flow compile GundamEX
 ```
 
-The current universal build uses 27,173 ALMs, 551 RAM blocks, and 45 DSP
-blocks. It closes the 62.5 MHz core domain with +2.596 ns setup slack; the
-worst setup slack anywhere in the design is +0.563 ns and worst hold slack is
-+0.126 ns.
+The current universal build uses 26,959 ALMs, 551 RAM blocks, and 45 DSP
+blocks. It closes the 62.5 MHz core domain with +2.598 ns setup slack; the
+worst setup slack anywhere in the design is +0.566 ns and worst hold slack is
++0.150 ns.
 
 ## Tests
 

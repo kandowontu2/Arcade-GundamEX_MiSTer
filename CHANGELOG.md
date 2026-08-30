@@ -2,11 +2,11 @@
 
 ## 1.0.1 - Unreleased
 
-- Added selectable digital dither handling for the button instruction screen.
-  Safe is now the universal power-on default and requires a seven-pixel A/B run
-  to avoid altering ordinary sprite art while preventing HDMI scaler aliasing.
-  Raw remains selectable for CRT/direct video, and Strong preserves the earlier
-  three-pixel behavior for comparison.
+- Added deterministic digital dither handling for the button instruction
+  screen. The universal output now always requires a seven-pixel A/B run before
+  averaging, avoiding ordinary sprite art while preventing HDMI scaler
+  aliasing. Removing the selector also prevents saved status from an older test
+  build from silently restoring raw output.
 - Restored conservative CAS-3 graphics reads and bounded refresh priority for
   compatibility with both standard MiSTer SDRAM modules and SuperStation One's
   integrated BGA SDRAM.

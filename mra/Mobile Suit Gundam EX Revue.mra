@@ -1,12 +1,12 @@
 <misterromdescription>
   <name>Mobile Suit Gundam EX Revue</name>
-  <mratimestamp>202608300001</mratimestamp>
+  <mratimestamp>202608300002</mratimestamp>
   <mameversion>0287</mameversion>
   <setname>gundamex</setname>
   <year>1994</year>
   <manufacturer>Banpresto</manufacturer>
   <category>Fighter / 2.5D</category>
-  <rbf>GundamEX_20260830</rbf>
+  <rbf>GundamEX_20260830b</rbf>
   <about author="OpenAI Codex and kandowontu" webpage="https://github.com/kandowontu/GundamEX_MiSTer" />
   <buttons names="Attack 1,Attack 2,Attack 3,Attack 4,Start,Coin,Service" default="A,B,X,Y,Start,Select,R" />
   <switches default="ff,ff" base="8">
