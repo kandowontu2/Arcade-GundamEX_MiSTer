@@ -5,7 +5,7 @@ logic clk = 1'b0;
 always #5 clk = ~clk;
 logic reset = 1'b1;
 logic ce_pix = 1'b1;
-logic [1:0] mode = 2'd1;
+logic [1:0] mode = 2'd0;
 logic hblank = 1'b0;
 logic vblank = 1'b0;
 logic [7:0] red_in = 8'd0;
@@ -36,7 +36,7 @@ initial begin
 	repeat (2) @(posedge clk);
 	reset = 1'b0;
 
-	// Strict mode leaves a short A/B/A detail untouched.
+	// Safe/default mode leaves a short A/B/A detail untouched.
 	present_pixel(24'h204060, 24'h204060);
 	present_pixel(24'h80a0c0, 24'h80a0c0);
 	present_pixel(24'h204060, 24'h204060);
@@ -48,13 +48,13 @@ initial begin
 	present_pixel(24'h204060, 24'h507090);
 	present_pixel(24'h80a0c0, 24'h507090);
 
-	// Off preserves the source exactly even inside a confirmed run.
-	mode = 2'd0;
+	// Raw preserves the source exactly even inside a confirmed run.
+	mode = 2'd1;
 	present_pixel(24'h204060, 24'h204060);
 
 	// Blanking clears history so the next active pixels cannot blend with the
 	// preceding line.
-	mode = 2'd1;
+	mode = 2'd0;
 	hblank = 1'b1;
 	present_pixel(24'h000000, 24'h000000);
 	hblank = 1'b0;
@@ -71,7 +71,7 @@ initial begin
 	present_pixel(24'h80a0c0, 24'h80a0c0);
 	present_pixel(24'h204060, 24'h507090);
 
-	$display("PASS gd_dither_blend separates raw, strict, and strong modes");
+	$display("PASS gd_dither_blend defaults safe and separates raw/strong modes");
 	$finish;
 end
 endmodule

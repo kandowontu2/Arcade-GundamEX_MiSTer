@@ -38,7 +38,7 @@ localparam CONF_STR = {
 	"P1O[3],Service / test menu,Off,On;",
 	"P1O[7],Language,English,Japanese;",
 	"P1O[9:8],CPU speed,Compensated 24.40 MHz,Native 16.27 MHz,Turbo 20.33 MHz,Turbo 30.00 MHz;",
-	"P1O[33:32],HDMI dither blend,Off,Strict,Strong,Reserved;",
+	"P1O[33:32],Digital dither,Safe,Raw,Strong,Reserved;",
 	"P1-;",
 	"O46,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%,CRT 75%;",
 	"P2,CRT Geometry;",
@@ -60,7 +60,7 @@ localparam CONF_STR = {
 	"R[0],Reset and close OSD;",
 	"J1,Attack 1,Attack 2,Attack 3,Attack 4,Start,Coin,Service;",
 	"jn,A,B,X,Y,Start,Select,R;",
-	"v,1.0.1-SS1-test3;",
+	"v,1.0.1-SS1-test4;",
 	"V,v",`BUILD_DATE
 };
 
@@ -296,9 +296,10 @@ wire video_hblank = crt_geometry ? crt_out_hblank : hblank;
 wire video_vblank = crt_geometry ? crt_out_vblank : vblank;
 
 // The instruction panels use a dense one-pixel checkerboard that a CRT blends
-// naturally. Keep raw pixels as the faithful default for CRT/direct analogue.
-// HDMI users can select Strict (a long A/B run, safe for gameplay) or Strong
-// (the former three-pixel detector, useful only for comparison).
+// naturally but that aliases into wide bands under some HDMI scaler profiles.
+// Safe is the power-on default and requires a long A/B run before averaging.
+// Raw remains available for CRT/direct video, while Strong is retained only
+// as a comparison mode.
 wire [7:0] mixer_red;
 wire [7:0] mixer_green;
 wire [7:0] mixer_blue;

@@ -28,7 +28,7 @@ over a neutral black video background.
 
 ## Install
 
-1. Copy `GundamEX_20260824c.rbf` to `/media/fat/_Arcade/cores/`.
+1. Copy `GundamEX_20260830.rbf` to `/media/fat/_Arcade/cores/`.
 2. Copy `Mobile Suit Gundam EX Revue.mra` to `/media/fat/_Arcade/`.
 3. Put a legally obtained, unmodified `gundamex.zip` in
    `/media/fat/games/mame/`.
@@ -70,12 +70,12 @@ The **Scandoubler Fx** setting leaves native 15-kHz analog RGB active when set
 to **None**. MiSTer's `forced_scandoubler=1` setting and the HQ2x/CRT choices
 produce scandoubled output where required.
 
-**HDMI dither blend** defaults to **Off** so CRT and direct-analogue output
-retain the raw arcade pixels. **Strict** mode requires a long one-pixel A/B run
+**Digital dither** defaults to **Safe**. It requires a long one-pixel A/B run
 before averaging, preventing the instruction artwork's intentional CRT dither
-from aliasing into wide HDMI bands without altering short sprite details.
-**Strong** retains the earlier three-pixel detector for comparison and is not
-recommended for normal gameplay.
+from aliasing into wide bands under HDMI scaling without altering short sprite
+details. Select **Raw** for exact arcade pixels on CRT/direct video. **Strong**
+retains the earlier three-pixel detector for comparison and is not recommended
+for normal gameplay.
 
 The **CRT Geometry** submenu provides signed H Size, H Offset, V Size, and V
 Offset controls. Leave the master switch **Off** for the untouched native
@@ -118,10 +118,10 @@ The project targets the Cyclone V `5CSEBA6U23I7` and Quartus Prime Lite 17.0:
 quartus_sh --flow compile GundamEX
 ```
 
-The v1.0.0 release build uses 27,193 ALMs, 551 RAM blocks, and 45 DSP
-blocks. It closes the 62.5 MHz core domain with +2.285 ns setup slack; the
-worst setup slack anywhere in the design is +0.327 ns and worst hold slack is
-+0.247 ns.
+The current universal build uses 27,173 ALMs, 551 RAM blocks, and 45 DSP
+blocks. It closes the 62.5 MHz core domain with +2.596 ns setup slack; the
+worst setup slack anywhere in the design is +0.563 ns and worst hold slack is
++0.126 ns.
 
 ## Tests
 

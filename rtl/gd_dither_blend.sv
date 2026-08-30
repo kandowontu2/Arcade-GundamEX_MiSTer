@@ -2,9 +2,11 @@
 //
 // The DX-101 artwork uses A/B/A/B checkerboards as an analogue-CRT color
 // blend. Uneven HDMI scaling can turn those single-pixel patterns into broad
-// vertical bands. Strict mode requires a seven-pixel A/B run before blending,
-// avoiding the false positives that a three-pixel detector creates in normal
-// sprite detail. Strong mode retains the short detector for comparison.
+// vertical bands. Safe mode (mode 0, the power-on default) requires a
+// seven-pixel A/B run before blending, avoiding the false positives that a
+// three-pixel detector creates in normal sprite detail. Raw mode (mode 1)
+// preserves every source pixel for CRT/direct video. Strong mode retains the
+// short detector for comparison.
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 module gd_dither_blend
@@ -42,7 +44,7 @@ wire alternating_long = (valid_count >= 3'd6)
 	&& (previous_pixel == previous_five_pixel)
 	&& (current_pixel != previous_pixel);
 wire alternating = !hblank && !vblank
-	&& (((mode == 2'd1) && alternating_long)
+	&& (((mode == 2'd0) && alternating_long)
 	    || ((mode == 2'd2) && alternating_short));
 
 function automatic [7:0] average_channel;

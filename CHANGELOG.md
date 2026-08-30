@@ -2,10 +2,11 @@
 
 ## 1.0.1 - Unreleased
 
-- Added an optional HDMI dither blend for the button instruction screen. Raw
-  pixels now remain the default for CRT/direct analogue output; Strict mode
-  requires a seven-pixel A/B run to avoid altering ordinary sprite art, while
-  Strong preserves the earlier three-pixel behavior for comparison.
+- Added selectable digital dither handling for the button instruction screen.
+  Safe is now the universal power-on default and requires a seven-pixel A/B run
+  to avoid altering ordinary sprite art while preventing HDMI scaler aliasing.
+  Raw remains selectable for CRT/direct video, and Strong preserves the earlier
+  three-pixel behavior for comparison.
 - Restored conservative CAS-3 graphics reads and bounded refresh priority for
   compatibility with both standard MiSTer SDRAM modules and SuperStation One's
   integrated BGA SDRAM.
