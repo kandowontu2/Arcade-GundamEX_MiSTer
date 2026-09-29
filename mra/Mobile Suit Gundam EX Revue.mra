@@ -7,7 +7,7 @@
   <manufacturer>Banpresto</manufacturer>
   <category>Fighter / 2.5D</category>
   <rbf>GundamEX_20260830b</rbf>
-  <about author="OpenAI Codex and kandowontu" webpage="https://github.com/kandowontu/GundamEX_MiSTer" />
+  <about author="OpenAI Codex and kandowontu2" webpage="https://github.com/kandowontu2/GundamEX_MiSTer" />
   <buttons names="Attack 1,Attack 2,Attack 3,Attack 4,Start,Coin,Service" default="A,B,X,Y,Start,Select,R" />
   <switches default="ff,ff" base="8">
     <dip bits="0" name="Demo Sounds" ids="Off,On" />

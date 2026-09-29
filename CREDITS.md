@@ -3,7 +3,7 @@
 ## Core
 
 - FPGA core RTL, integration, tests, and documentation: OpenAI Codex
-- Hardware testing, game validation, direction, and release: kandowontu
+- Hardware testing, game validation, direction, and release: kandowontu2
 - Original arcade game and P0-113A hardware: Banpresto and its original game
   developers and hardware engineers
 

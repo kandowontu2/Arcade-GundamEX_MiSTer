@@ -14,7 +14,7 @@ No copyrighted game ROMs are included in this project.
 
 ## Status
 
-Version 1.0.0 boots and runs on a DE10-Nano with video, stereo audio, both
+Version 1.0.1 boots and runs on a DE10-Nano with video, stereo audio, both
 players, service functions, and direct MRA loading. The release build uses a
 21-line DX-101 render reservoir plus open-page graphics SDRAM transfers to
 prevent the repeated/corrupt scanlines previously seen in battle scenes. The
@@ -28,7 +28,7 @@ over a neutral black video background.
 
 ## Install
 
-1. Copy `GundamEX_20260830.rbf` to `/media/fat/_Arcade/cores/`.
+1. Copy `GundamEX_20260830b.rbf` to `/media/fat/_Arcade/cores/`.
 2. Copy `Mobile Suit Gundam EX Revue.mra` to `/media/fat/_Arcade/`.
 3. Put a legally obtained, unmodified `gundamex.zip` in
    `/media/fat/games/mame/`.

@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.0.1 - Unreleased
+## 1.0.1 - 2026-09-29
 
 - Added deterministic digital dither handling for the button instruction
   screen. The universal output now always requires a seven-pixel A/B run before
