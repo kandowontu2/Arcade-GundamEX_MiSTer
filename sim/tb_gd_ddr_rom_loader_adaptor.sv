@@ -79,6 +79,10 @@ initial begin
 	ioctl_download = 1;
 	repeat (2) @(negedge clk);
 	ioctl_addr = 27'd8;
+	repeat (2) @(negedge clk);
+	// hps_io advances its address when FIO_FILE_TX stops the transfer.
+	// The active-transfer value, not this post-stop value, is the length.
+	ioctl_addr = 27'd9;
 	ioctl_download = 0;
 	#1;
 	if (!busy)
@@ -96,8 +100,21 @@ initial begin
 	wait (replay_count == 8);
 	wait (!busy);
 	repeat (3) @(negedge clk);
+	if (replay_count != 8)
+		$fatal(1, "fast-load replayed %0d bytes instead of 8", replay_count);
 	if (ddr_acquire || ddr_read)
 		$fatal(1, "DDR interface was not released without an extra read");
+
+	// Frameworks that do not increment the stop address work unchanged.
+	replay_count = 0;
+	ioctl_addr = 27'd11;
+	ioctl_download = 1;
+	repeat (3) @(negedge clk);
+	ioctl_download = 0;
+	wait (!busy);
+	repeat (3) @(negedge clk);
+	if (replay_count != 11)
+		$fatal(1, "unchanged stop address replayed %0d bytes", replay_count);
 	$display("PASS gd_ddr_rom_loader_adaptor legacy and fast-load paths");
 	$finish;
 end

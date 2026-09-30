@@ -14,9 +14,11 @@ No copyrighted game ROMs are included in this project.
 
 ## Status
 
-The hardware-tested v1.0.2 boots and runs on a DE10-Nano with video, stereo audio,
-both players, service functions, and direct MRA loading. Version 1.0.3 moves
-the cheat definitions into the MRA and adds the standard MiSTer cheat menu.
+The core boots and runs on a DE10-Nano with video, stereo audio, both players,
+service functions, and direct MRA loading. Version 1.0.3 moves the cheat
+definitions into the MRA and adds the standard MiSTer cheat menu; v1.0.4
+corrects the fast-loader length handling that could leave the game in reset
+with a black screen.
 The core uses a 21-line DX-101 render reservoir plus open-page graphics SDRAM
 transfers to prevent the repeated/corrupt scanlines previously seen in battle scenes. The
 complete focused RTL regression suite passes and Quartus Prime Lite 17.0 closes
@@ -133,10 +135,10 @@ The project targets the Cyclone V `5CSEBA6U23I7` and Quartus Prime Lite 17.0:
 quartus_sh --flow compile GundamEX
 ```
 
-The v1.0.3 universal build uses 27,722 ALMs, 551 RAM blocks, and 45 DSP
-blocks. It closes the 62.5 MHz core domain with +2.109 ns setup slack; the
-worst setup slack anywhere in the design is +0.306 ns and worst hold slack is
-+0.163 ns.
+The v1.0.4 universal build uses 28,130 ALMs, 551 RAM blocks, and 45 DSP
+blocks. It closes the 62.5 MHz core domain with +2.473 ns setup slack; the
+worst setup slack anywhere in the design is +0.510 ns and worst hold slack is
++0.240 ns.
 
 ## Tests
 
@@ -148,7 +150,8 @@ The focused RTL tests use Icarus Verilog 11 or newer:
 
 The suite covers actual MRA cheat packets, enable/disable transfers, big-endian
 byte lanes, compare/OR/AND flags, reset behavior, analog conversion,
-conditional HDMI dither blending, DDR and SDRAM transfers, compact ROM
+conditional HDMI dither blending, DDR and SDRAM transfers, the bundled HPS
+fast-load protocol and its stop-address semantics, compact ROM
 loading with missing-lane expansion, the 93C46 command interface, raster
 timing, raster interrupts, rowscroll replay, graphics arbitration, DX-101
 rendering, display-list buffering, and TMP68301 behavior. The ROM layout can

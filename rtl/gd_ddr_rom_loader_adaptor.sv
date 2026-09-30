@@ -103,6 +103,12 @@ always_ff @(posedge clk) begin
 		ddr_read <= 1'b0;
 	end
 	else begin
+		// Main supplies the staged-image length while download is active.
+		// Our hps_io advances ioctl_addr on the stop command; that post-stop
+		// value is not a byte count. Sampling before the falling edge also
+		// works with framework versions which leave the address unchanged.
+		if (ioctl_download)
+			length <= ioctl_addr;
 		if (ioctl_download && !previous_download)
 			write_detected <= 1'b0;
 		if (ioctl_download && ioctl_wr)
@@ -116,8 +122,7 @@ always_ff @(posedge clk) begin
 				// directly to DDR and only reports its final byte length over
 				// ioctl. A normal byte-stream transfer is left untouched.
 				if (previous_download && !ioctl_download
-				    && !write_detected && (ioctl_addr != 27'd0)) begin
-					length <= ioctl_addr;
+				    && !write_detected && (length != 27'd0)) begin
 					offset <= 27'd0;
 					state <= DDR_READ;
 				end

@@ -52,6 +52,22 @@ if ($LASTEXITCODE -ne 0) { throw 'DDR ROM loader adaptor unit-test compilation f
 & $vvp $output
 if ($LASTEXITCODE -ne 0) { throw 'DDR ROM loader adaptor unit test failed' }
 
+# Icarus 11 requires parameter defaults; Quartus permits the required,
+# no-default declarations used by the MiSTer framework. Supply only those
+# syntax defaults in an ignored test copy, keeping the protocol body
+# identical to the actual framework and leaving sys/hps_io.sv untouched.
+$testHps = Join-Path $PSScriptRoot '../output_files/hps_io_test.sv'
+$testHpsSource = (Get-Content -LiteralPath 'sys/hps_io.sv' -Raw).Replace(
+    'parameter CONF_STR,', 'parameter CONF_STR="",').Replace(
+    'CONF_STR="", STRLEN)', 'CONF_STR="", STRLEN=1)')
+[System.IO.Directory]::CreateDirectory((Split-Path $testHps)) | Out-Null
+[System.IO.File]::WriteAllText($testHps, $testHpsSource)
+$output = Join-Path $PSScriptRoot 'hps_fast_load.out'
+& $iverilog -g2012 -s tb_gd_hps_fast_load -o $output rtl/gd_ddr_rom_loader_adaptor.sv $testHps sim/tb_gd_hps_fast_load.sv
+if ($LASTEXITCODE -ne 0) { throw 'HPS fast-load protocol unit-test compilation failed' }
+& $vvp $output
+if ($LASTEXITCODE -ne 0) { throw 'HPS fast-load protocol unit test failed' }
+
 $output = Join-Path $PSScriptRoot 'eeprom.out'
 & $iverilog -g2012 -s tb_gd_93c46 -o $output rtl/gd_93c46.sv sim/tb_gd_93c46.sv
 if ($LASTEXITCODE -ne 0) { throw 'EEPROM unit-test compilation failed' }

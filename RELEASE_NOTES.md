@@ -1,4 +1,4 @@
-# Mobile Suit Gundam EX Revue MiSTer v1.0.3
+# Mobile Suit Gundam EX Revue MiSTer v1.0.4
 
 This is a native MiSTer FPGA implementation of Banpresto's 1994 *Mobile Suit
 Gundam EX Revue* arcade hardware. It loads an unmodified `gundamex.zip`
@@ -12,7 +12,18 @@ directly; no ROM conversion script is required.
    included with this package.
 3. Open **Arcade > Mobile Suit Gundam EX Revue** on MiSTer.
 
-## v1.0.3 changes
+## v1.0.4 changes
+
+- Fixes the black screen caused by an extra byte at the end of fast DDR ROM
+  loading. The adapter now captures the byte count before `hps_io` advances
+  its address on the stop command.
+- Adds tests using the actual bundled HPS interface, including aligned,
+  partial-word, repeated, and empty staged transfers, plus compatibility with
+  unchanged stop addresses and ordinary byte streaming.
+- Keeps the same universal build and undated filenames; no per-device build
+  or ROM conversion script is needed.
+
+## Included v1.0.3 cheat support
 
 - Cheat definitions now live in the MRA and appear through the standard MiSTer
   **Cheats** menu. Infinite credits/time and P1/P2 infinite energy remain
@@ -26,9 +37,8 @@ directly; no ROM conversion script is required.
   selection replacement/clearing, byte lanes, flags and transfer isolation.
 
 Install both the new RBF and MRA. Enable cheats after the game boots; disable
-them before running the game's startup RAM test. This build has been tested
-in RTL simulation and Quartus; on-device confirmation of the new cheat menu
-and effects is still pending.
+them before running the game's startup RAM test. On-device confirmation of
+the individual cheat effects is still pending.
 
 ## Included v1.0.2 loading and layout work
 
@@ -56,11 +66,19 @@ and effects is still pending.
 
 ## Validation
 
-The exact FPGA build in this archive passed the complete focused RTL regression
-suite, ROM-layout verification, Quartus Prime Lite 17.0 compilation, and
+The exact FPGA build in this archive passed all 17 focused RTL regression
+tests, ROM-layout verification, Quartus Prime Lite 17.0 compilation, and
 TimeQuest timing analysis with no timing violations. Worst setup slack is
-`+0.306 ns`, 62.5 MHz core setup slack is `+2.109 ns`, and worst hold slack is
-`+0.163 ns`.
+`+0.510 ns`, 62.5 MHz core setup slack is `+2.473 ns`, and worst hold slack is
+`+0.240 ns`.
+
+The matching RBF and MRA were installed and checksum-verified on a DE10-Nano.
+Fast DDR loading reached attract-mode gameplay, confirmed by a live MiSTer
+capture, including a repeat launch, and kandowontu confirmed that it is
+working on the device. The same core also booted using ordinary streaming
+while isolating the loader fault. This is not a complete playthrough or a
+test of all individual cheat effects; SuperStation One retesting remains
+pending.
 
 ## Build identity
 

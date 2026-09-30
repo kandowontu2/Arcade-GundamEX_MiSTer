@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.0.4 - 2026-09-30
+
+- Fixed a black screen after direct-DDR ROM staging. The bundled MiSTer
+  interface increments its address on download stop; the adapter now retains
+  the active-transfer byte count instead of replaying one extra byte and
+  failing the game-specific ROM-layout check.
+- Added regression coverage through the actual bundled `hps_io` file-transfer
+  protocol, including aligned, partial-word, repeated, and empty transfers.
+- Retained compatibility with ordinary byte streaming and frameworks that
+  leave the stop address unchanged, plus the MRA-defined cheats from v1.0.3.
+
 ## 1.0.3 - 2026-09-29
 
 - Restored the author/contributor credit to kandowontu while retaining the
