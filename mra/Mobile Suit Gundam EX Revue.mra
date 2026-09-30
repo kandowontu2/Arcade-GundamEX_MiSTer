@@ -1,13 +1,13 @@
 <misterromdescription>
   <name>Mobile Suit Gundam EX Revue</name>
-  <mratimestamp>202609290002</mratimestamp>
+  <mratimestamp>202609290003</mratimestamp>
   <mameversion>0287</mameversion>
   <setname>gundamex</setname>
   <year>1994</year>
   <manufacturer>Banpresto</manufacturer>
   <category>Fighter / 2.5D</category>
   <rbf>Arcade-GundamEX</rbf>
-  <about author="OpenAI Codex and kandowontu2" webpage="https://github.com/kandowontu2/Arcade-GundamEX_MiSTer" />
+  <about author="OpenAI Codex and kandowontu" webpage="https://github.com/kandowontu2/Arcade-GundamEX_MiSTer" />
   <buttons names="Attack 1,Attack 2,Attack 3,Attack 4,Start,Coin,Service" default="A,B,X,Y,Start,Select,R" />
   <switches default="ff,ff" base="8">
     <dip bits="0" name="Demo Sounds" ids="Off,On" />
@@ -24,6 +24,14 @@
     <dip bits="14" name="Debug Mode" ids="On,Off" />
     <dip bits="15" name="Free Play" ids="On,Off" />
   </switches>
+  <!-- Standard MiSTer/M92 code format: Flags Address Compare Data, with
+       big-endian 32-bit fields and actual 68000 byte addresses. -->
+  <cheats size="16" max="8">
+    <cheat name="Infinite credits">00000010 002034EF 00000000 00000009</cheat>
+    <cheat name="Infinite time">00000020 002035A2 00000000 00000B9B</cheat>
+    <cheat name="P1 infinite energy">00000010 00204569 00000000 00000093</cheat>
+    <cheat name="P2 infinite energy">00000010 002045BF 00000000 00000093</cheat>
+  </cheats>
   <!-- Every source ROM remains pinned by its individual CRC below. The
        aggregate MD5 is disabled for compatibility with MiSTer Main variants
        that hash interleaved MRA data differently. -->

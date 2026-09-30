@@ -14,10 +14,9 @@ module gd_cpu_subsystem
 	input  logic        service,
 	input  logic        language_japanese,
 	input  logic  [1:0] cpu_timing,
-	input  logic        cheat_infinite_credits,
-	input  logic        cheat_infinite_time,
-	input  logic        cheat_p1_energy,
-	input  logic        cheat_p2_energy,
+	input  logic [128:0] cheat_code,
+	input  logic        cheat_reset,
+	input  logic        cheat_enable,
 	input  logic        eeprom_do,
 	output logic        eeprom_cs,
 	output logic        eeprom_clk,
@@ -218,19 +217,18 @@ end
 wire [15:0] work_q;
 wire [15:0] work_video_unused;
 wire [15:0] work_read_data;
-wire [15:0] work_write_data;
-gd_work_ram_cheats work_ram_cheats
+// MRA codes change CPU reads only. The CPU always writes its original data,
+// so removing a selected code immediately restores the underlying RAM value.
+gd_mra_cheat_engine #(.ADDR_WIDTH(24), .MAX_CODES(8)) work_ram_cheats
 (
-	.address(cpu_even_address), .ram_q(work_q),
-	.cpu_write_data(cpu_data_out), .cpu_write_be(cpu_byte_enable),
-	.cheat_infinite_credits, .cheat_infinite_time,
-	.cheat_p1_energy, .cheat_p2_energy,
-	.cpu_read_data(work_read_data), .ram_write_data(work_write_data)
+	.clk, .reset(cheat_reset), .enable(cheat_enable && !reset),
+	.code(cheat_code), .available(), .addr_in(cpu_even_address),
+	.data_in(work_q), .data_out(work_read_data)
 );
 
 gd_word_ram #(.ADDR_WIDTH(15)) work_ram
 (
-	.clk(clk), .address(cpu_even_address[15:1]), .data(work_write_data),
+	.clk(clk), .address(cpu_even_address[15:1]), .data(cpu_data_out),
 	.byte_enable(cpu_byte_enable), .write(local_write && cs_work), .q(work_q),
 	.video_clk(clk), .video_address(15'd0), .video_q(work_video_unused)
 );

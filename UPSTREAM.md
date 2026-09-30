@@ -52,8 +52,25 @@ implemented in HDL and XML.
 - Collection: Pugsy's MAME Cheat Collection
 - File consulted: `gundamex.xml`
 
-Only the documented addresses and values are represented in the core. The
-external cheat XML and cheat-engine source are not included.
+Only the documented addresses and values are represented in the MRA. The
+external MAME cheat XML is not included.
+
+## MRA cheat engine
+
+- Repository: `https://github.com/MiSTer-devel/Arcade-IremM92_MiSTer.git`
+- Upstream commit inspected: `68a4683e237eafca02e3df56dd84bacc255fba55`
+- Sources: `rtl/cheatengine.sv` and the code receiver in `rtl/m92.sv`
+- Upstream author and copyright holder: Martin Donlon (2023)
+- Original cheat-code handling: Kitrinx (2019)
+- Upstream license: GPL-2.0-or-later
+- Local path: `rtl/gd_mra_cheats.sv`
+
+The engine retains the 16-byte Flags/Address/Compare/Data protocol and replaces
+the M92 little-endian lanes with 68000 big-endian lanes. The local adaptation
+uses eight slots, validates code flags, alignment, addresses and packet order,
+and explicitly rejects longword comparison. It preserves the upstream
+copyright/license notice and credits Kitrinx. MRA selection handling was also
+checked against MiSTer Main's `cheats.cpp` and `support/arcade/mra_loader.cpp`.
 
 ## Direct DDR ROM loading
 

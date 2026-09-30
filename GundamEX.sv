@@ -48,18 +48,14 @@ localparam CONF_STR = {
 	"P2O[24:21],V Offset,0,+1,+2,+3,+4,+5,+6,+7,-8,-7,-6,-5,-4,-3,-2,-1;",
 	"P2O[25],V Size Mode,PVM,Cabinet;",
 	"P2O[26],Rotation,Normal,180 deg;",
-	"P3,Cheats;",
-	"P3O[28],Infinite credits,Off,On;",
-	"P3O[29],Infinite time,Off,On;",
-	"P3O[30],P1 infinite energy,Off,On;",
-	"P3O[31],P2 infinite energy,Off,On;",
+	"C,Cheats;",
 	"DIP;",
 	"-;",
 	"T[0],Reset;",
 	"R[0],Reset and close OSD;",
 	"J1,Attack 1,Attack 2,Attack 3,Attack 4,Start,Coin,Service;",
 	"jn,A,B,X,Y,Start,Select,R;",
-	"v,1.0.2;",
+	"v,1.0.3;",
 	"V,v",`BUILD_DATE
 };
 
@@ -112,6 +108,18 @@ pll pll
 
 wire cold_reset = ~pll_locked;
 wire reset = RESET | status[0] | buttons[1] | cold_reset;
+
+wire [128:0] cheat_code;
+wire cheat_reset;
+wire cheat_enable;
+gd_mra_cheat_loader cheat_loader
+(
+	.clk(clk_sys),
+	.reset(cold_reset || (ioctl_download && ioctl_index == 16'd0)),
+	.ioctl_download, .ioctl_index, .ioctl_wr, .ioctl_addr,
+	.ioctl_data(ioctl_dout), .code(cheat_code),
+	.code_reset(cheat_reset), .enable(cheat_enable)
+);
 
 logic [15:0] dip_switches = 16'hffff;
 always_ff @(posedge clk_sys) begin
@@ -175,9 +183,7 @@ gd_core core
 	.clk(clk_sys), .cold_reset, .reset,
 	.memory_ready(memory_ready_sys),
 	.service(status[3]),
-	.cheat_infinite_credits(status[28]),
-	.cheat_infinite_time(status[29]),
-	.cheat_p1_energy(status[30]), .cheat_p2_energy(status[31]),
+	.cheat_code, .cheat_reset, .cheat_enable,
 	.language_japanese(status[7]),
 	.cpu_timing(status[9:8]),
 	.rotate_180(status[26]),

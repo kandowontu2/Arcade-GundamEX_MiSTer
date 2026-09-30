@@ -3,7 +3,7 @@
 ## Core
 
 - FPGA core RTL, integration, tests, and documentation: OpenAI Codex
-- Hardware testing, game validation, direction, and release: kandowontu2
+- Hardware testing, game validation, direction, and release: kandowontu
 - Original arcade game and P0-113A hardware: Banpresto and its original game
   developers and hardware engineers
 
@@ -33,6 +33,12 @@ The fast DDR ROM loader adaptor is adapted from Martin Donlon's GPLv3-or-later
 implementation in the MiSTer IGS PGM/F2 cores. Its original copyright and
 license notice is retained in `rtl/gd_ddr_rom_loader_adaptor.sv`.
 
+The MRA cheat engine and download protocol in `rtl/gd_mra_cheats.sv` are
+adapted from the MiSTer Irem M92 core by Martin Donlon (copyright 2023,
+GPLv2-or-later), based on cheat-code handling by Kitrinx (2019). The source
+retains those credits and its license notice. The local adaptation supplies
+68000 big-endian byte lanes and bounded/validated code loading.
+
 ## Hardware documentation and behavioral references
 
 Public MAME source was used as hardware documentation and a behavioral
@@ -54,7 +60,8 @@ hardware.
 The optional work-RAM cheat addresses and values were sourced from Pugsy's
 public MAME Cheat Collection (`gundamex.xml`) and independently checked against
 the supported ROM set. The collection credits its individual contributors in
-its accompanying `cheat.txt`; no cheat-engine source code is included here.
+its accompanying `cheat.txt`. The four address/value definitions are encoded
+in the MRA; the adapted FPGA cheat engine is credited above.
 
 ## Generated FPGA IP
 

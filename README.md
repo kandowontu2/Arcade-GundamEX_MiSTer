@@ -14,10 +14,11 @@ No copyrighted game ROMs are included in this project.
 
 ## Status
 
-Version 1.0.2 boots and runs on a DE10-Nano with video, stereo audio, both
-players, service functions, and direct MRA loading. The release build uses a
-21-line DX-101 render reservoir plus open-page graphics SDRAM transfers to
-prevent the repeated/corrupt scanlines previously seen in battle scenes. The
+The hardware-tested v1.0.2 boots and runs on a DE10-Nano with video, stereo audio,
+both players, service functions, and direct MRA loading. Version 1.0.3 moves
+the cheat definitions into the MRA and adds the standard MiSTer cheat menu.
+The core uses a 21-line DX-101 render reservoir plus open-page graphics SDRAM
+transfers to prevent the repeated/corrupt scanlines previously seen in battle scenes. The
 complete focused RTL regression suite passes and Quartus Prime Lite 17.0 closes
 timing.
 
@@ -67,9 +68,19 @@ The two coinage menus represent the PCB's physical Coin Chute A and Coin Chute
 B DIP tables. Their choices are intentionally different: chute B includes the
 original mixed-credit 2C/3C, 2C/5C, and 3C/5C rates.
 
-The **Cheats** submenu provides independently selectable infinite credits,
-infinite time, P1 infinite energy, and P2 infinite energy. These are native HDL
-work-RAM clamps and do not require MiSTer scripts or external cheat files.
+The standard MiSTer **Cheats** menu provides independently selectable infinite
+credits, infinite time, P1 infinite energy, and P2 infinite energy. Definitions
+live in the MRA's `<cheats>` block and use the same 16-byte code format as the
+[Irem M92 core](https://github.com/MiSTer-devel/Arcade-IremM92_MiSTer#cheats).
+Install the matching RBF and MRA together and enable cheats after the game has
+booted. MiSTer sends the selected codes to the FPGA when a selection changes;
+no additional cheat files or scripts are required.
+
+Codes override work-RAM reads without directly changing stored RAM. Turning
+a cheat off exposes the current underlying value immediately. Selections
+survive an OSD reset and are cleared when loading a new game/core. Disable
+cheats before restarting into the game's RAM test. The old status-bit cheat
+settings are no longer used.
 
 The **Scandoubler Fx** setting leaves native 15-kHz analog RGB active when set
 to **None**. MiSTer's `forced_scandoubler=1` setting and the HQ2x/CRT choices
@@ -122,10 +133,10 @@ The project targets the Cyclone V `5CSEBA6U23I7` and Quartus Prime Lite 17.0:
 quartus_sh --flow compile GundamEX
 ```
 
-The current universal build uses 26,959 ALMs, 551 RAM blocks, and 45 DSP
-blocks. It closes the 62.5 MHz core domain with +2.598 ns setup slack; the
-worst setup slack anywhere in the design is +0.566 ns and worst hold slack is
-+0.150 ns.
+The v1.0.3 universal build uses 27,722 ALMs, 551 RAM blocks, and 45 DSP
+blocks. It closes the 62.5 MHz core domain with +2.109 ns setup slack; the
+worst setup slack anywhere in the design is +0.306 ns and worst hold slack is
++0.163 ns.
 
 ## Tests
 
@@ -135,8 +146,9 @@ The focused RTL tests use Icarus Verilog 11 or newer:
 ./sim/run_unit_tests.ps1
 ```
 
-The suite covers analog conversion, conditional HDMI dither blending, DDR and
-SDRAM transfers, compact ROM
+The suite covers actual MRA cheat packets, enable/disable transfers, big-endian
+byte lanes, compare/OR/AND flags, reset behavior, analog conversion,
+conditional HDMI dither blending, DDR and SDRAM transfers, compact ROM
 loading with missing-lane expansion, the 93C46 command interface, raster
 timing, raster interrupts, rowscroll replay, graphics arbitration, DX-101
 rendering, display-list buffering, and TMP68301 behavior. The ROM layout can

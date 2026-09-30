@@ -9,7 +9,7 @@ set_global_assignment -name SYSTEMVERILOG_FILE rtl/gd_video_timing.sv
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/gd_raster_irq.sv
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/gd_rowscroll_history.sv
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/gd_word_ram.sv
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/gd_work_ram_cheats.sv
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/gd_mra_cheats.sv
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/gd_sprite_ram.sv
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/gd_gfx_arbiter.sv
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/gd_sdram.sv

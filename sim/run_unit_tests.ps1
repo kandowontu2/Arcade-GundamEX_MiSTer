@@ -21,11 +21,18 @@ if ($LASTEXITCODE -ne 0) { throw 'Dither-blend unit-test compilation failed' }
 & $vvp $output
 if ($LASTEXITCODE -ne 0) { throw 'Dither-blend unit test failed' }
 
-$output = Join-Path $PSScriptRoot 'work_ram_cheats.out'
-& $iverilog -g2012 -s tb_gd_work_ram_cheats -o $output rtl/gd_work_ram_cheats.sv sim/tb_gd_work_ram_cheats.sv
-if ($LASTEXITCODE -ne 0) { throw 'Work-RAM cheat unit-test compilation failed' }
-& $vvp $output
-if ($LASTEXITCODE -ne 0) { throw 'Work-RAM cheat unit test failed' }
+$output = Join-Path $PSScriptRoot 'mra_cheats.out'
+& $iverilog -g2012 -s tb_gd_mra_cheats -o $output rtl/gd_mra_cheats.sv sim/tb_gd_mra_cheats.sv
+if ($LASTEXITCODE -ne 0) { throw 'MRA cheat unit-test compilation failed' }
+[xml]$cheatMra = Get-Content -LiteralPath 'mra/Mobile Suit Gundam EX Revue.mra' -Raw
+$cheatPackets = @{}
+foreach ($cheat in $cheatMra.misterromdescription.cheats.cheat) {
+    $packet = $cheat.InnerText -replace '\s', ''
+    if ($packet -notmatch '^[0-9a-fA-F]{32}$') { throw "Invalid 16-byte MRA cheat: $($cheat.name)" }
+    $cheatPackets[$cheat.name] = $packet
+}
+& $vvp $output "+credits=$($cheatPackets['Infinite credits'])" "+time=$($cheatPackets['Infinite time'])" "+p1=$($cheatPackets['P1 infinite energy'])" "+p2=$($cheatPackets['P2 infinite energy'])"
+if ($LASTEXITCODE -ne 0) { throw 'MRA cheat unit test failed' }
 
 $output = Join-Path $PSScriptRoot 'ddr_memory.out'
 & $iverilog -g2012 -s tb_gd_ddr_memory -o $output rtl/gd_ddr_memory.sv sim/tb_gd_ddr_memory.sv

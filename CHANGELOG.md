@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.0.3 - 2026-09-29
+
+- Restored the author/contributor credit to kandowontu while retaining the
+  current repository URLs under kandowontu2.
+- Moved the four cheat definitions into the MRA's standard `<cheats>` block
+  and replaced the fixed status-bit controls with MiSTer's `C,Cheats;` menu.
+- Adapted Martin Donlon/Kitrinx's Irem M92 cheat engine for big-endian 68000
+  work-RAM reads and standard index-255 selection downloads.
+- Added complete-set replacement, empty-selection clearing, warm-reset
+  retention, new-ROM clearing, packet validation, and an eight-code limit.
+- Added regression coverage using the actual MRA code bytes, including lane
+  order, compare/OR/AND operations, malformed transfers and code-table bounds.
+
 ## 1.0.2 - 2026-09-29
 
 - Adopted the MiSTer-devel arcade repository layout with tracked distributable

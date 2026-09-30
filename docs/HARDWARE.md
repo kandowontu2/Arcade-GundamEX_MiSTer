@@ -79,10 +79,27 @@ Coin Chute A and Coin Chute B intentionally have different rate choices. The
 original Gundam EX Revue PCB assigns ordinary whole-credit ratios to chute A
 and several mixed ratios (including 2C/3C, 2C/5C, and 3C/5C) to chute B.
 
-Optional native cheats clamp the game's documented work-RAM values for credits
+The MRA defines cheats for the game's documented work-RAM values for credits
 (`2034ef`), round time (`2035a2-2035a3`), P1 energy (`204569`), and P2 energy
-(`2045bf`). They affect only CPU reads/writes at those addresses and remain off
-by default.
+(`2045bf`). The standard `C,Cheats;` menu downloads selected codes through
+`ioctl_index=255`. Each 16-byte code contains four big-endian 32-bit fields:
+Flags, CPU byte Address, Compare, Data. `<cheats size="16" max="8">` tells
+MiSTer Main the engine's limit. A new transfer replaces the complete selected
+set; Main's two-byte empty transfer clears it. Partial/reordered packets are
+discarded, and other download channels are ignored.
+
+`gd_mra_cheats.sv` adapts Martin Donlon's M92 engine to the 68000's big-endian
+byte lanes. It overrides only work-RAM CPU reads; writes remain unmodified.
+Flags bit 0 enables comparison, bits 6:4 select byte/word/longword size (1/2/4),
+and bits 9:8 select replace/OR/AND (0/1/2). Word and longword addresses must
+be aligned. Longword comparison is rejected because one CPU read provides
+only 16 bits. Invalid flags or out-of-range addresses cannot alias into RAM.
+Later matching codes take priority, and comparison uses the original RAM data.
+
+Codes are disabled during a selection transfer and runtime reset. The code
+table itself survives warm reset and is cleared on a new ROM download/cold
+reset. Cheats default to off; enable them after the game boots and disable
+them before entering its startup RAM test.
 
 ## Video and timing
 
