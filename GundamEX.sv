@@ -59,7 +59,7 @@ localparam CONF_STR = {
 	"R[0],Reset and close OSD;",
 	"J1,Attack 1,Attack 2,Attack 3,Attack 4,Start,Coin,Service;",
 	"jn,A,B,X,Y,Start,Select,R;",
-	"v,1.0.1-SS1-test5;",
+	"v,1.0.2;",
 	"V,v",`BUILD_DATE
 };
 

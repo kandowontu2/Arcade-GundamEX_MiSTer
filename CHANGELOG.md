@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.0.2 - 2026-09-29
+
+- Adopted the MiSTer-devel arcade repository layout with tracked distributable
+  files in `releases/`.
+- Standardized the release core and MRA target on the undated
+  `Arcade-GundamEX.rbf` filename and packaged the install ZIP from the MiSTer
+  SD-card root.
+- Replaced the internal tester version string with the public `1.0.2` version.
+- Added MiSTer Main fast DDR staging with automatic legacy streaming fallback,
+  based on Martin Donlon's IGS PGM/F2 ROM-loader adaptor.
+
 ## 1.0.1 - 2026-09-29
 
 - Added deterministic digital dither handling for the button instruction

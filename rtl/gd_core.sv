@@ -92,15 +92,47 @@ logic loader_gfx_req;
 logic loader_gfx_ack;
 logic loader_gfx_burst;
 logic [63:0] loader_gfx_burst_data;
-logic eeprom_load_wr;
-logic [6:0] eeprom_load_addr;
-logic [7:0] eeprom_load_data;
+	logic eeprom_load_wr;
+	logic [6:0] eeprom_load_addr;
+	logic [7:0] eeprom_load_data;
+	logic loader_busy;
+	logic loader_strobe;
+	logic [26:0] loader_addr;
+	logic [7:0] loader_data;
+	logic loader_wait;
+	logic adaptor_ddr_acquire;
+	logic [28:0] adaptor_ddr_addr;
+	logic adaptor_ddr_read;
+	logic adaptor_ddr_busy;
+	logic adaptor_ddr_rdata_ready;
 
-gd_rom_loader loader
-(
-	.clk, .reset(cold_reset), .memory_ready, .downloading(rom_downloading),
-	.ioctl_wr(rom_wr), .ioctl_addr(rom_addr), .ioctl_data(rom_data),
-	.ioctl_wait(rom_wait), .ddr_load_wr, .ddr_load_addr, .ddr_load_data,
+	logic core_ddr_busy;
+	logic [7:0] core_ddr_burstcount;
+	logic [28:0] core_ddr_addr;
+	logic core_ddr_dout_ready;
+	logic core_ddr_rd;
+	logic [63:0] core_ddr_din;
+	logic [7:0] core_ddr_be;
+	logic core_ddr_we;
+
+	gd_ddr_rom_loader_adaptor loader_adaptor
+	(
+		.clk, .reset(cold_reset), .ioctl_download(rom_downloading),
+		.ioctl_addr(rom_addr), .ioctl_wr(rom_wr), .ioctl_data(rom_data),
+		.ioctl_wait(rom_wait), .busy(loader_busy), .data_wait(loader_wait),
+		.data_strobe(loader_strobe), .data_addr(loader_addr),
+		.data(loader_data), .ddr_acquire(adaptor_ddr_acquire),
+		.ddr_addr(adaptor_ddr_addr), .ddr_read(adaptor_ddr_read),
+		.ddr_rdata(ddr_dout), .ddr_rdata_ready(adaptor_ddr_rdata_ready),
+		.ddr_busy(adaptor_ddr_busy)
+	);
+
+	gd_rom_loader loader
+	(
+		.clk, .reset(cold_reset), .memory_ready, .downloading(loader_busy),
+		.ioctl_wr(loader_strobe), .ioctl_addr(loader_addr),
+		.ioctl_data(loader_data), .ioctl_wait(loader_wait),
+		.ddr_load_wr, .ddr_load_addr, .ddr_load_data,
 	.ddr_load_wait, .ddr_load_idle, .gfx_addr(loader_gfx_addr),
 	.gfx_din(loader_gfx_din), .gfx_be(loader_gfx_be),
 	.gfx_rnw(loader_gfx_rnw), .gfx_req(loader_gfx_req),
@@ -139,11 +171,34 @@ gd_ddr_memory rom_memory
 	.ram_ack(cpu_ram_ack),
 	.gfx_addr(25'd0), .gfx_req(1'b0),
 	.gfx_dout(), .gfx_ack(),
-	.ddr_clk, .ddr_busy, .ddr_burstcount, .ddr_addr, .ddr_dout,
-	.ddr_dout_ready, .ddr_rd, .ddr_din, .ddr_be, .ddr_we
-);
+		.ddr_clk, .ddr_busy(core_ddr_busy),
+		.ddr_burstcount(core_ddr_burstcount), .ddr_addr(core_ddr_addr),
+		.ddr_dout, .ddr_dout_ready(core_ddr_dout_ready),
+		.ddr_rd(core_ddr_rd), .ddr_din(core_ddr_din),
+		.ddr_be(core_ddr_be), .ddr_we(core_ddr_we)
+	);
 
-wire runtime_reset = reset || !memory_ready || !rom_ready || rom_downloading;
+	// The replay adaptor owns DDR only while fetching a staged 64-bit word.
+	// The game memory client has priority for the packed write triggered by
+	// each eighth replayed byte, so an accepted write can never be masked by
+	// the following read request.
+	wire adaptor_ddr_selected = adaptor_ddr_acquire
+		&& !core_ddr_rd && !core_ddr_we;
+	assign ddr_burstcount = adaptor_ddr_selected ? 8'd1
+		: core_ddr_burstcount;
+	assign ddr_addr = adaptor_ddr_selected ? adaptor_ddr_addr : core_ddr_addr;
+	assign ddr_rd = adaptor_ddr_selected ? adaptor_ddr_read : core_ddr_rd;
+	assign ddr_din = core_ddr_din;
+	assign ddr_be = adaptor_ddr_selected ? 8'hff : core_ddr_be;
+	assign ddr_we = adaptor_ddr_selected ? 1'b0 : core_ddr_we;
+	assign core_ddr_busy = ddr_busy || (adaptor_ddr_acquire
+		&& !core_ddr_rd && !core_ddr_we);
+	assign adaptor_ddr_busy = ddr_busy || core_ddr_rd || core_ddr_we;
+	assign core_ddr_dout_ready = ddr_dout_ready && !adaptor_ddr_selected;
+	assign adaptor_ddr_rdata_ready = ddr_dout_ready
+		&& adaptor_ddr_selected;
+
+	wire runtime_reset = reset || !memory_ready || !rom_ready || loader_busy;
 logic raster_irq;
 logic [15:0] video_control;
 logic [26:0] video_x_offset;

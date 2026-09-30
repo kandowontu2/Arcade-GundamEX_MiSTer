@@ -59,6 +59,15 @@ The complete MRA stream is `0x1680080` bytes:
 
 No Linux-side helper or ROM preprocessing is required.
 
+On current MiSTer Main versions, the MRA stages this compact stream directly
+at physical DDR address `0x30000000`. An FPGA-side adaptor then replays the
+bytes through the same game-specific unpacker: program and sample data settle
+in a separate runtime region beginning at `0x32000000`, graphics expand into
+SDRAM, and the factory EEPROM initializes on chip. Keeping the ranges separate
+prevents staged graphics bytes from contaminating work RAM. If Main supplies
+ordinary `ioctl_wr` byte writes instead, the adaptor transparently passes them
+through, so one RBF/MRA pair supports both loading paths.
+
 ## Service and cheat controls
 
 The MRA exposes the board's original active-low Service Mode, Debug Mode,

@@ -51,8 +51,10 @@ module gd_ddr_memory
 	output logic        ddr_we
 );
 
-// DDRAM_ADDR is expressed in 64-bit words. Physical byte base 0x30000000.
-localparam logic [28:0] DDR_WORD_BASE = 29'h06000000;
+// DDRAM_ADDR is expressed in 64-bit words. Runtime memory starts at physical
+// byte address 0x32000000, safely above the temporary 0x30000000-0x3168007f
+// fast-load staging image.
+localparam logic [28:0] DDR_WORD_BASE = 29'h06400000;
 
 typedef enum logic [2:0] {
 	IDLE, WAIT_CPU, WAIT_SOUND, WAIT_RAM_READ, WAIT_RAM_WRITE, WAIT_GFX

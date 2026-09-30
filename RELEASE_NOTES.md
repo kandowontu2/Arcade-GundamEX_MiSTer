@@ -1,4 +1,4 @@
-# Mobile Suit Gundam EX Revue MiSTer v1.0.1
+# Mobile Suit Gundam EX Revue MiSTer v1.0.2
 
 This is a native MiSTer FPGA implementation of Banpresto's 1994 *Mobile Suit
 Gundam EX Revue* arcade hardware. It loads an unmodified `gundamex.zip`
@@ -12,7 +12,18 @@ directly; no ROM conversion script is required.
    included with this package.
 3. Open **Arcade > Mobile Suit Gundam EX Revue** on MiSTer.
 
-## v1.0.1 changes
+## v1.0.2 changes
+
+- Uses the MiSTer-devel arcade layout, including tracked artifacts in
+  `releases/` and an SD-card-root ZIP containing `_Arcade` and
+  `_Arcade/cores`.
+- Standardizes the public core filename and MRA target on the undated
+  `Arcade-GundamEX.rbf` name.
+- Replaces the internal tester version string with the public `1.0.2` version.
+- Adds fast DDR-staged ROM loading on current MiSTer Main while retaining an
+  automatic ordinary-stream fallback for older installations.
+
+## Included v1.0.1 compatibility work
 
 - Uses conservative CAS-3 graphics reads and bounded refresh priority for
   compatibility with standard MiSTer SDRAM modules and SuperStation One's
@@ -30,14 +41,13 @@ directly; no ROM conversion script is required.
 The exact FPGA build in this archive passed the complete focused RTL regression
 suite, ROM-layout verification, Quartus Prime Lite 17.0 compilation, and
 TimeQuest timing analysis with no timing violations. Worst setup slack is
-`+0.566 ns`, 62.5 MHz core setup slack is `+2.598 ns`, and worst hold slack is
-`+0.150 ns`.
+`+0.398 ns`, 62.5 MHz core setup slack is `+2.448 ns`, and worst hold slack is
+`+0.248 ns`.
 
 ## Build identity
 
-- RBF: `GundamEX_20260830b.rbf`
-- RBF SHA-256:
-  `73cecce929ab4734108debac6b75c10c554c75ac8b36ead036a9b941cb96014f`
+- RBF: `Arcade-GundamEX.rbf`
+- RBF SHA-256: recorded in the accompanying `SHA256SUMS.txt`
 - Supported ROM archive name: `gundamex.zip`
 
 ## Credits and licensing

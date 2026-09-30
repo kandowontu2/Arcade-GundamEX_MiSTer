@@ -1,0 +1,2 @@
+a14215737de5bdbbe69076d29f4e8e8c76f858f5bc4af4bee531e75609dec857  _Arcade/cores/Arcade-GundamEX.rbf
+3cfef27cdf8546b30f706baad4d52f0edc3c6ddda85789a71ea0c0cc7e73c834  _Arcade/Mobile Suit Gundam EX Revue.mra

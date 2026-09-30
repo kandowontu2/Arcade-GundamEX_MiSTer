@@ -29,6 +29,10 @@ Umberto Parisi (rmonic79), with the `crt_adjust` header also crediting Andrea
 Bogazzi / @asturur. They are distributed under GNU GPL v3 or later; their
 original authorship, design notes, and license headers are retained.
 
+The fast DDR ROM loader adaptor is adapted from Martin Donlon's GPLv3-or-later
+implementation in the MiSTer IGS PGM/F2 cores. Its original copyright and
+license notice is retained in `rtl/gd_ddr_rom_loader_adaptor.sv`.
+
 ## Hardware documentation and behavioral references
 
 Public MAME source was used as hardware documentation and a behavioral

@@ -57,7 +57,7 @@ always_ff @(posedge clk) begin
 		busy_count <= busy_count - 1;
 		ddr_busy <= (busy_count > 1);
 		if ((busy_count == 1) && pending_read) begin
-			ddr_dout <= memory[read_address - 29'h06000000];
+			ddr_dout <= memory[read_address - 29'h06400000];
 			ddr_dout_ready <= 1;
 			read_address <= read_address + 29'd1;
 			if (burst_words_remaining == 1) begin
@@ -75,7 +75,7 @@ always_ff @(posedge clk) begin
 		ddr_busy <= 0;
 		if (ddr_we) begin
 			for(lane=0;lane<8;lane=lane+1)
-				if(ddr_be[lane]) memory[ddr_addr - 29'h06000000][lane*8 +: 8]
+				if(ddr_be[lane]) memory[ddr_addr - 29'h06400000][lane*8 +: 8]
 					<= ddr_din[lane*8 +: 8];
 			write_count <= write_count + 1;
 			ddr_busy <= 1;

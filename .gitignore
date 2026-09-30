@@ -18,6 +18,7 @@ tools/__pycache__/
 *.pin
 *.qws
 *.rbf
+!releases/*.rbf
 *.rpt
 *.smsg
 *.sof

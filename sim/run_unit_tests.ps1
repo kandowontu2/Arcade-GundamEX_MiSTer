@@ -39,6 +39,12 @@ if ($LASTEXITCODE -ne 0) { throw 'ROM loader unit-test compilation failed' }
 & $vvp $output
 if ($LASTEXITCODE -ne 0) { throw 'ROM loader unit test failed' }
 
+$output = Join-Path $PSScriptRoot 'ddr_rom_loader_adaptor.out'
+& $iverilog -g2012 -s tb_gd_ddr_rom_loader_adaptor -o $output rtl/gd_ddr_rom_loader_adaptor.sv sim/tb_gd_ddr_rom_loader_adaptor.sv
+if ($LASTEXITCODE -ne 0) { throw 'DDR ROM loader adaptor unit-test compilation failed' }
+& $vvp $output
+if ($LASTEXITCODE -ne 0) { throw 'DDR ROM loader adaptor unit test failed' }
+
 $output = Join-Path $PSScriptRoot 'eeprom.out'
 & $iverilog -g2012 -s tb_gd_93c46 -o $output rtl/gd_93c46.sv sim/tb_gd_93c46.sv
 if ($LASTEXITCODE -ne 0) { throw 'EEPROM unit-test compilation failed' }
