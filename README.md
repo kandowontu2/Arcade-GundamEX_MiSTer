@@ -15,10 +15,13 @@ No copyrighted game ROMs are included in this project.
 ## Status
 
 The core boots and runs on a DE10-Nano with video, stereo audio, both players,
-service functions, and direct MRA loading. Version 1.0.3 moves the cheat
-definitions into the MRA and adds the standard MiSTer cheat menu; v1.0.4
-corrects the fast-loader length handling that could leave the game in reset
-with a black screen.
+service functions, and direct MRA loading. Version 1.0.5 fixes graphics SDRAM
+input capture for affected integrated-memory systems using a fixed falling-edge
+DDIO path. It retains the MRA cheats and fast-loader fixes from v1.0.3/1.0.4.
+One undated RBF/MRA pair is supplied for DE10-Nano and compatible systems;
+no DIP changes, alternate build, or user-selected memory phase is required.
+See [SDRAM compatibility and validation](docs/SDRAM_COMPATIBILITY.md) for the
+hardware evidence and the limits of the timing checks.
 The core uses a 21-line DX-101 render reservoir plus open-page graphics SDRAM
 transfers to prevent the repeated/corrupt scanlines previously seen in battle scenes. The
 complete focused RTL regression suite passes and Quartus Prime Lite 17.0 closes
@@ -135,10 +138,29 @@ The project targets the Cyclone V `5CSEBA6U23I7` and Quartus Prime Lite 17.0:
 quartus_sh --flow compile GundamEX
 ```
 
-The v1.0.4 universal build uses 28,130 ALMs, 551 RAM blocks, and 45 DSP
-blocks. It closes the 62.5 MHz core domain with +2.473 ns setup slack; the
-worst setup slack anywhere in the design is +0.510 ns and worst hold slack is
-+0.240 ns.
+Build results and validation for v1.0.5 are recorded in
+[release validation](docs/RELEASE_VALIDATION.md). After compiling, verify the
+fitted falling-edge input registers with:
+
+```powershell
+quartus_sta -t scripts/audit_sdram_f0.tcl
+```
+
+For the checked release workflow from a Git checkout on Windows, use the
+installed Quartus path:
+
+```powershell
+./scripts/build_release.ps1 -Version 1.0.5 -QuartusDirectory "C:/intelFPGA_lite/17.0/quartus" -UpdateReleaseArtifacts
+# Review internal timing and update docs/RELEASE_VALIDATION.md, then stage source:
+git add .
+./scripts/package_release.ps1 -Version 1.0.5
+```
+
+The optional `-RomArchive` argument performs the independent local ROM check.
+Packaging refuses failed regressions, internal timing violations, missing F0
+capture audit, changed fitted source or mismatched compressed exports. It
+produces install/source ZIPs and checksums in `release/v1.0.5/`; it does not
+publish or submit anything by itself.
 
 ## Tests
 
@@ -159,7 +181,28 @@ also be checked against a local archive:
 
 ```powershell
 python ./tools/verify_rom_layout.py "$HOME/Downloads/gundamex.zip"
+python ./tools/verify_capture_image.py "$HOME/Downloads/gundamex.zip" --cross-check-compact
 ```
+
+The production F0 tests write and read 32 KiB across four banks and 32 physical
+rows, including scalar reads, refresh, row changes, reset and full/narrow
+synthetic data windows. To also test the installed Intel simulation model:
+
+```powershell
+./sim/run_unit_tests.ps1 -QuartusDirectory "C:/intelFPGA_lite/17.0/quartus"
+```
+
+The vendor simulation library is not redistributed. Controlled data windows
+are regression stimuli, not an electrical model of a particular board.
+
+## Upstream preparation
+
+The repository keeps one undated RBF/MRA pair in `releases/`, native source in
+`rtl/`, the vendored MiSTer framework in `sys/`, and source MRA in `mra/`.
+The install ZIP uses SD-card-root paths `_Arcade/` and `_Arcade/cores/`.
+See [the upstream checklist](docs/UPSTREAM_READINESS.md) and
+`scripts/package_release.ps1` for repeatable packaging. Preparation does not
+constitute MiSTer-devel acceptance; no PR has been submitted.
 
 ## Source and licensing
 

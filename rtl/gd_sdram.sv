@@ -104,11 +104,11 @@ logic [63:0] latched_burst_data;
 logic  [1:0] burst_write_word;
 logic [15:0] dq_out;
 logic        dq_oe = 1'b0;
-// Keep one fixed capture register between the SDRAM pins and all controller
-// clients. This is the same structure used by established MiSTer SDRAM
-// controllers and lets Quartus place all sixteen bits in their input I/O
-// cells. Writing SDRAM_DQ directly into a variable burst slice can leave
-// three of the four row words captured in core logic instead.
+// One fixed falling-edge DDIO input path serves scalar and graphics clients.
+// ALTDDIO_IN retimes dataout_l onto clk's rising edge, preserving the existing
+// CAS-3 pipeline and request/ack latency. The private paired-edge experiment
+// identified this path by full-image CRC on affected integrated SDRAM hardware.
+// See docs/SDRAM_COMPATIBILITY.md; no runtime edge selection is needed.
 logic [15:0] dq_capture;
 
 // The core, loader, graphics arbiter and this controller all use clk_sys.
@@ -184,12 +184,34 @@ always_ff @(posedge clk) begin
 	           && !latched_rnw));
 end
 
-always_ff @(posedge clk) begin
-	if (reset)
-		dq_capture <= 16'd0;
-	else
-		dq_capture <= SDRAM_DQ;
-end
+`ifdef SYNTHESIS
+altddio_in
+#(
+	.intended_device_family("Cyclone V"),
+	.invert_input_clocks("OFF"),
+	.lpm_hint("UNUSED"),
+	.lpm_type("altddio_in"),
+	.power_up_high("OFF"),
+	.width(16)
+)
+sdram_input_samples
+(
+	.datain(SDRAM_DQ),
+	.inclock(clk),
+	.inclocken(1'b1),
+	.aclr(1'b0),
+	.aset(1'b0),
+	.sclr(1'b0),
+	.sset(1'b0),
+	.dataout_h(),
+	.dataout_l(dq_capture)
+);
+`else
+// Match the vendor primitive: falling sample, then rising-edge retiming.
+logic [15:0] dq_falling;
+always_ff @(negedge clk) dq_falling <= SDRAM_DQ;
+always_ff @(posedge clk) dq_capture <= dq_falling;
+`endif
 
 always_ff @(posedge clk) begin
 	command    <= CMD_NOP;
@@ -407,9 +429,9 @@ always_ff @(posedge clk) begin
 
 					if (latched_rnw) begin
 						command      <= CMD_READ;
-						// CAS latency is three. Capture midway through the
-						// single data cycle, three clk rising edges after the
-						// SDRAM samples this command.
+						// CAS latency is three. Consume the falling-edge sample
+						// after its DDIO rising-edge retimer; client latency is
+						// unchanged from the paired-edge validation build.
 						delay_count  <= 16'd4;
 						state        <= ST_READ_WAIT;
 					end

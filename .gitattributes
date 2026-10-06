@@ -4,6 +4,7 @@
 *.md text eol=lf
 *.mra text eol=lf
 *.ps1 text eol=lf
+*.py text eol=lf
 *.qip text eol=lf
 *.qpf text eol=lf
 *.qsf text eol=lf

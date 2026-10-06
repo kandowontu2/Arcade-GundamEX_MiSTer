@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.0.5 - 2026-10-05
+
+- Use fixed falling-edge ALTDDIO_IN capture for all graphics SDRAM scalar and
+  DMA reads. Preserve the 62.5 MHz clock, forwarded-clock polarity, CAS-3/BL4
+  pipeline, conservative loader writes, refresh and renderer scheduling.
+- Fluxxant's private full-image comparison returned F0 CRC `22645D45`,
+  matching the loaded image, while R0 returned `A9761A57`; clean gameplay
+  was reported. The production refit contains no comparison screen, CRC sweep,
+  edge selector or gameplay gate. Exact-build validation scope is documented.
+- Add independent ROM-layout verification, production pin-storage tests with
+  behavioral and installed Intel models, and a fitted F0 audit.
+- Retain one undated RBF/MRA pair, MRA cheats, service/CRT controls, analog
+  inputs, and fast/legacy ROM loading. No per-device settings are required.
+- Add checked release packaging, contributor provenance, validation notes
+  and a MiSTer-devel readiness checklist. No upstream PR submitted.
+
 ## 1.0.4 - 2026-09-30
 
 - Fixed a black screen after direct-DDR ROM staging. The bundled MiSTer

@@ -1,3 +1,4 @@
+param([string]$QuartusDirectory = $env:QUARTUS_ROOTDIR)
 $ErrorActionPreference = 'Stop'
 $iverilog = if ($env:IVERILOG) {
     $env:IVERILOG
@@ -103,6 +104,26 @@ $output = Join-Path $PSScriptRoot 'sdram_dma.out'
 if ($LASTEXITCODE -ne 0) { throw 'SDRAM DMA unit-test compilation failed' }
 & $vvp $output
 if ($LASTEXITCODE -ne 0) { throw 'SDRAM DMA unit test failed' }
+
+# Exercise actual pin writes, four banks, row changes, scalar reads, refresh
+# and reset against independent stored-data expectations. Vendor libraries
+# are read from an installed Quartus runtime, never redistributed.
+foreach ($shortWindow in @(0, 1)) {
+    $output = Join-Path $PSScriptRoot "sdram_f0_$shortWindow.out"
+    & $iverilog -g2012 -s tb_gd_sdram_f0_rom -P "tb_gd_sdram_f0_rom.SHORT_DQ_WINDOW=$shortWindow" -o $output rtl/gd_sdram.sv sim/tb_gd_sdram_f0_rom.sv
+    if ($LASTEXITCODE -ne 0) { throw 'F0 pin-storage compilation failed' }
+    & $vvp $output
+    if ($LASTEXITCODE -ne 0) { throw 'F0 pin-storage test failed' }
+    if ($QuartusDirectory) {
+        $vendorModel = Join-Path $QuartusDirectory 'eda/sim_lib/altera_mf.v'
+        if (!(Test-Path -LiteralPath $vendorModel)) { throw 'Quartus simulation library not found' }
+        $output = Join-Path $PSScriptRoot "sdram_f0_vendor_$shortWindow.out"
+        & $iverilog -g2012 -DSYNTHESIS -s tb_gd_sdram_f0_rom -P "tb_gd_sdram_f0_rom.SHORT_DQ_WINDOW=$shortWindow" -o $output rtl/gd_sdram.sv sim/tb_gd_sdram_f0_rom.sv $vendorModel
+        if ($LASTEXITCODE -ne 0) { throw 'Vendor F0 pin-storage compilation failed' }
+        & $vvp $output
+        if ($LASTEXITCODE -ne 0) { throw 'Vendor F0 pin-storage test failed' }
+    }
+}
 
 $output = Join-Path $PSScriptRoot 'dx101_video.out'
 & $iverilog -g2012 -s tb_gd_dx101_video -o $output rtl/gd_dx101_video.sv sim/tb_gd_dx101_video.sv

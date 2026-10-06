@@ -38,13 +38,15 @@ logic [15:0] captured_write_data [0:3];
 logic [8:0] captured_write_column [0:3];
 logic captured_write_precharge [0:3];
 
-always #4.365 clk = ~clk;
+always #8 clk = ~clk; // Production 62.5 MHz.
 
 gd_sdram dut(.*);
 
 // Minimal CAS-3, burst-length-4 SDRAM read model. Commands are sampled on
-// the forwarded SDRAM clock and returned data is changed on that same edge,
-// leaving it centered around the controller's following clk rising edge.
+// the forwarded SDRAM clock. Data arrives four ns before the capture edge
+// and stays valid for a full cycle. This is a functional timing fixture,
+// not a calibrated board model; the separate pin-storage test checks both
+// full-cycle and narrow synthetic windows against actual controller writes.
 always @(posedge SDRAM_CLK) begin
 	if (observing_writes
 	    && ({SDRAM_nRAS, SDRAM_nCAS, SDRAM_nWE} == 3'b011))
@@ -58,22 +60,22 @@ always @(posedge SDRAM_CLK) begin
 		write_count = write_count + 1;
 	end
 	if ({SDRAM_nRAS, SDRAM_nCAS, SDRAM_nWE} == 3'b101) begin
-		read_delay = 3;
+		read_delay = 2;
 		burst_word = 0;
 	end
 	else if (read_delay > 1) begin
 		read_delay = read_delay - 1;
 	end
 	else if (read_delay == 1) begin
-		external_dq = 16'h1122;
+		external_dq <= #12 16'h1122;
 		read_delay = 0;
 		burst_word = 1;
 	end
 	else if (read_delay == 0 && burst_word < 4) begin
 		case (burst_word)
-			1: external_dq = 16'h3344;
-			2: external_dq = 16'h5566;
-			default: external_dq = 16'h7788;
+			1: external_dq <= #12 16'h3344;
+			2: external_dq <= #12 16'h5566;
+			default: external_dq <= #12 16'h7788;
 		endcase
 		burst_word = burst_word + 1;
 	end
