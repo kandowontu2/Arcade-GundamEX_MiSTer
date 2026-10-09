@@ -49,11 +49,14 @@ try {
         if ((Get-FileHash -LiteralPath $file.Path).Hash -ne $file.Hash) { throw "Source changed during compile: $($file.Path)" }
     }
     if ($UpdateReleaseArtifacts) {
+        $buildId = Get-Content -LiteralPath 'build_id.v' -Raw
+        if ($buildId -notmatch 'BUILD_DATE\s+"(\d{6})"') { throw 'Missing fitted build date' }
+        $rbfName = "Arcade-GundamEX_20$($Matches[1]).rbf"
         New-Item -ItemType Directory -Path (Join-Path $root 'releases') -Force | Out-Null
-        Copy-Item -LiteralPath $rbf -Destination 'releases/Arcade-GundamEX.rbf' -Force
+        Copy-Item -LiteralPath $rbf -Destination "releases/$rbfName" -Force
         Copy-Item -LiteralPath 'mra/Mobile Suit Gundam EX Revue.mra' -Destination 'releases/Mobile Suit Gundam EX Revue.mra' -Force
         $lines = @(
-            "{0}  _Arcade/cores/Arcade-GundamEX.rbf" -f (Get-FileHash -LiteralPath $rbf).Hash.ToLowerInvariant()
+            "{0}  _Arcade/cores/{1}" -f (Get-FileHash -LiteralPath $rbf).Hash.ToLowerInvariant(), $rbfName
             "{0}  _Arcade/Mobile Suit Gundam EX Revue.mra" -f (Get-FileHash -LiteralPath 'releases/Mobile Suit Gundam EX Revue.mra').Hash.ToLowerInvariant()
         )
         [System.IO.File]::WriteAllText((Join-Path $root 'SHA256SUMS.txt'), ($lines -join "`n") + "`n", [System.Text.UTF8Encoding]::new($false))

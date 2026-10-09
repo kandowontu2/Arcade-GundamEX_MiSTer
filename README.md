@@ -18,7 +18,7 @@ The core boots and runs on a DE10-Nano with video, stereo audio, both players,
 service functions, and direct MRA loading. Version 1.0.5 fixes graphics SDRAM
 input capture for affected integrated-memory systems using a fixed falling-edge
 DDIO path. It retains the MRA cheats and fast-loader fixes from v1.0.3/1.0.4.
-One undated RBF/MRA pair is supplied for DE10-Nano and compatible systems;
+One dated RBF and undated MRA are supplied for DE10-Nano and compatible systems;
 no DIP changes, alternate build, or user-selected memory phase is required.
 See [SDRAM compatibility and validation](docs/SDRAM_COMPATIBILITY.md) for the
 hardware evidence and the limits of the timing checks.
@@ -34,7 +34,7 @@ over a neutral black video background.
 
 ## Install
 
-1. Copy `Arcade-GundamEX.rbf` to `/media/fat/_Arcade/cores/`.
+1. Copy `Arcade-GundamEX_20261005.rbf` to `/media/fat/_Arcade/cores/`.
 2. Copy `Mobile Suit Gundam EX Revue.mra` to `/media/fat/_Arcade/`.
 3. Put a legally obtained, unmodified `gundamex.zip` in
    `/media/fat/games/mame/`.
@@ -152,6 +152,7 @@ installed Quartus path:
 ```powershell
 ./scripts/build_release.ps1 -Version 1.0.5 -QuartusDirectory "C:/intelFPGA_lite/17.0/quartus" -UpdateReleaseArtifacts
 # Review internal timing and update docs/RELEASE_VALIDATION.md, then stage source:
+# Keep only the current dated RBF in releases; Git retains older builds.
 git add .
 ./scripts/package_release.ps1 -Version 1.0.5
 ```
@@ -197,12 +198,19 @@ are regression stimuli, not an electrical model of a particular board.
 
 ## Upstream preparation
 
-The repository keeps one undated RBF/MRA pair in `releases/`, native source in
+The repository keeps one dated RBF and undated MRA in `releases/`, native source in
 `rtl/`, the vendored MiSTer framework in `sys/`, and source MRA in `mra/`.
 The install ZIP uses SD-card-root paths `_Arcade/` and `_Arcade/cores/`.
 See [the upstream checklist](docs/UPSTREAM_READINESS.md) and
 `scripts/package_release.ps1` for repeatable packaging. Preparation does not
 constitute MiSTer-devel acceptance; no PR has been submitted.
+
+RBF filenames follow the [MiSTer template](https://github.com/MiSTer-devel/Template_MiSTer#source-structure)
+convention `Arcade-GundamEX_YYYYMMDD.rbf`. The MRA target remains
+`Arcade-GundamEX`, without a date or extension. The official distribution
+collector skips undated core binaries; dated naming enables discovery once
+the repository is included in its configured sources. Renaming alone does not
+register an independent repository with Update All or the default database.
 
 ## Source and licensing
 

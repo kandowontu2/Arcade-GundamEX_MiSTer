@@ -51,9 +51,19 @@ margin on every system.
   `f0d60fe0f660308288ec5cdf7ad8e6dd4fee4ef715708109cfc288493638580e`.
 - MRA semantics are unchanged except for the timestamp: original ROM CRCs,
   fast-DDR address, coin tables, buttons, service controls and cheats retained.
-- Packaging checks undated naming, source/release MRA byte identity, author
+- Packaging checks dated RBF naming, the undated MRA target, source/release MRA byte identity, author
   credit, checksums, source hygiene and every install-ZIP payload byte.
 
 The private comparison results are documented separately in
 [SDRAM_COMPATIBILITY.md](SDRAM_COMPATIBILITY.md). Exact production hardware
 retesting remains outstanding; the earlier private fit is not the new RBF.
+
+## Packaging refresh - 2026-10-09
+
+The same 4,314,820-byte bitstream is distributed as
+`Arcade-GundamEX_20261005.rbf`, retaining its original compiled build date.
+No HDL, framework, fitted-source input, ROM definition or bitstream byte has
+changed. The RBF SHA256 above remains valid. Filename regressions reject
+undated names, invalid dates, wrong core names and stale duplicate binaries;
+the install ZIP and published checksums are regenerated for the dated path.
+This packaging change requires neither a Quartus refit nor a new hardware claim.

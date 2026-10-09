@@ -11,6 +11,7 @@
 *.sdc text eol=lf
 *.sv text eol=lf
 *.tcl text eol=lf
+SHA256SUMS.txt text eol=lf
 *.v text eol=lf
 *.vhd text eol=lf
 *.rbf binary

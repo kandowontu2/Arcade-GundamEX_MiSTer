@@ -34,7 +34,16 @@ $manifest = Get-Content -LiteralPath (Join-Path $build "v$Version-fitted-source.
 foreach ($file in $manifest) {
     if ((Get-FileHash -LiteralPath (Join-Path $root $file.Path)).Hash -ne $file.Hash) { throw "Fitted source changed: $($file.Path)" }
 }
-$rbf = Join-Path $root 'releases/Arcade-GundamEX.rbf'
+$releaseRbfs = @(Get-ChildItem -LiteralPath (Join-Path $root 'releases') -Filter '*.rbf' -File)
+if ($releaseRbfs.Count -ne 1 -or $releaseRbfs[0].Name -cnotmatch '^Arcade-GundamEX_\d{8}\.rbf$') {
+    throw 'Expected one dated Arcade-GundamEX_YYYYMMDD.rbf in releases'
+}
+$rbfName = $releaseRbfs[0].Name
+$rbf = $releaseRbfs[0].FullName
+$buildId = Get-Content -LiteralPath (Join-Path $root 'build_id.v') -Raw
+if ($buildId -notmatch 'BUILD_DATE\s+"(\d{6})"' -or $rbfName -ne "Arcade-GundamEX_20$($Matches[1]).rbf") {
+    throw 'Release filename must retain the fitted bitstream build date'
+}
 foreach ($copy in @('GundamEX.rbf', 'Arcade-GundamEX.rbf')) {
     if ((Get-FileHash -LiteralPath $rbf).Hash -ne (Get-FileHash -LiteralPath (Join-Path $build $copy)).Hash) {
         throw 'Release RBF must equal the standard assembler and compressed CPF exports'
@@ -51,6 +60,8 @@ foreach ($target in @($zip, $sourceZip, $sums)) {
 }
 Push-Location $root
 try {
+    & python tools/test_verify_release.py
+    if ($LASTEXITCODE -ne 0) { throw 'Release-name regressions failed' }
     & python tools/verify_release.py --version $Version
     if ($LASTEXITCODE -ne 0) { throw 'Release verification failed' }
     New-Item -ItemType Directory -Path $OutputDirectory -Force | Out-Null
@@ -58,7 +69,7 @@ try {
     $archive = [System.IO.Compression.ZipFile]::Open($zip, [System.IO.Compression.ZipArchiveMode]::Create)
     try {
         foreach ($pair in @(
-            @('releases/Arcade-GundamEX.rbf', '_Arcade/cores/Arcade-GundamEX.rbf'),
+            @("releases/$rbfName", "_Arcade/cores/$rbfName"),
             @("releases/$mraName", "_Arcade/$mraName"),
             @('RELEASE_NOTES.md', 'README.txt'), @('CREDITS.md', 'CREDITS.md'),
             @('LICENSE', 'LICENSE'), @('SHA256SUMS.txt', 'SHA256SUMS.txt')
