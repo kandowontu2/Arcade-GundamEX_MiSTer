@@ -12,6 +12,11 @@ The repository contains no game ROM data.
 The `sys/` directory is a vendored MiSTer framework snapshot. Individual
 source headers retain their original copyright and license notices.
 
+The root `clean.bat` is adapted from the same template's cleanup script,
+inspected at `76dd8f5c509a2237b8e707773032a31df5905048`. Its cleanup commands
+are unchanged, with `pushd "%~dp0"` / `popd` added to anchor their scope to the
+project rather than the caller's working directory. This does not update `sys/`.
+
 ## fx68k processor core
 
 - Repository: `https://github.com/jtfpga/fx68k.git`

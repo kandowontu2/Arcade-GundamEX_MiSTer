@@ -189,6 +189,67 @@ function automatic wrapped_vertical_y_contains;
 	end
 endfunction
 
+// Shared descriptor geometry for the visibility scan and drawing stage.
+// Keep the same register/state boundaries; these helpers are combinational.
+function automatic integer sprite_source_line;
+	input fixed_position;
+	input [8:0] physical_line;
+	input [26:0] y_offset;
+	input [26:0] y_zoom;
+	integer y_base;
+	begin
+		y_base = (27'h7ffffff - y_offset) >> 16;
+		sprite_source_line = (fixed_position || !y_zoom[26])
+			? physical_line : ((physical_line + y_base) & 11'h7ff);
+	end
+endfunction
+
+function automatic integer sprite_first_line;
+	input fixed_position;
+	input [15:0] header_y;
+	input [15:0] object_y;
+	integer sy;
+	integer first_line;
+	begin
+		sy = object_y & 16'h01ff;
+		if (sy & 9'h100) sy = sy - 512;
+		if (fixed_position) sy = sy - 16'h90;
+		// Both sprite types wrap after adding the header offset. The
+		// floating path's former intermediate wrap is identical modulo 512.
+		first_line = (sy + (header_y & 16'h01ff)) & 9'h1ff;
+		if (first_line & 9'h100) first_line = first_line - 512;
+		sprite_first_line = first_line;
+	end
+endfunction
+
+function automatic integer sprite_height_pixels;
+	input global_size;
+	input floating;
+	input [15:0] header_y;
+	input [15:0] object_y;
+	reg [15:0] size_word;
+	begin
+		size_word = global_size ? header_y : object_y;
+		if (floating)
+			sprite_height_pixels = ((size_word >> 10) + 1) * 16;
+		else
+			sprite_height_pixels = (1 << size_word[11:10]) * 8;
+	end
+endfunction
+
+function automatic integer sprite_width_tiles;
+	input global_size;
+	input floating;
+	input [15:0] header_x;
+	input [15:0] object_x;
+	reg [15:0] size_word;
+	begin
+		size_word = global_size ? header_x : object_x;
+		sprite_width_tiles = floating ? (size_word >> 10)
+			: (1 << size_word[11:10]);
+	end
+endfunction
+
 // A DX-101 list can contain hundreds of one-tile descriptors even though
 // only a few intersect a given scanline. Scan the 64-bit records into a
 // compact active list, then spend renderer cycles only on contributing rows.
@@ -324,16 +385,14 @@ logic signed [11:0] float_dest_x;
 logic [15:0] tilemap_attr;
 logic [15:0] tilemap_code;
 
-integer calc_sy;
 integer calc_sx;
 integer calc_firstline;
-integer calc_endline;
 integer calc_size_x;
 integer calc_size_y;
 integer calc_line;
 integer calc_row;
 integer calc_base_code;
-integer calc_height;
+integer calc_span_height;
 integer calc_width;
 integer calc_scroll_y;
 integer calc_tile_x;
@@ -342,7 +401,6 @@ integer calc_tile_address;
 integer calc_dest_x;
 integer calc_screen_x;
 integer calc_used_line;
-integer calc_y_base;
 logic [7:0] draw_pen [0:7];
 integer draw_pixel_x [0:7];
 integer draw_calc_column;
@@ -372,9 +430,7 @@ function automatic [7:0] mask_pen;
 	end
 endfunction
 
-// Exact graphics row for the same normal-sprite tile four physical lines
-// later. This crosses an 8-pixel tile boundary using the descriptor's
-// horizontal size and vertical flip, avoiding speculative sprite-state reads.
+// Use precisely the same line transform and bounds as R_SPRITE_PROCESS.
 function automatic sprite_intersects_line;
 	input [15:0] fh0;
 	input [15:0] fh1;
@@ -385,46 +441,17 @@ function automatic sprite_intersects_line;
 	input  [8:0] physical_line;
 	input [26:0] y_offset;
 	input [26:0] y_zoom;
-	integer sy;
 	integer first_line;
-	integer end_line;
 	integer height;
-	integer size_y;
 	integer width;
 	integer used_line;
-	integer y_base;
 	begin
-		y_base = (27'h7ffffff - y_offset) >> 16;
-		if (fh0[14] || !y_zoom[26])
-			used_line = physical_line;
-		else
-			used_line = (physical_line + y_base) & 11'h7ff;
-		if (fh3[15]) begin
-			sy = fs1 & 16'h01ff;
-			if (sy & 9'h100) sy = sy - 512;
-			if (fh0[14]) sy = sy - 16'h90;
-			sy = sy & 9'h1ff;
-			if (sy & 9'h100) sy = sy - 512;
-			height = ((((fh0[12] ? fh2 : fs1) & 16'hfc00) >> 10) + 1);
-			first_line = (sy + (fh2 & 16'h01ff)) & 9'h1ff;
-			if (first_line & 9'h100) first_line = first_line - 512;
-			end_line = first_line + height * 16 - 1;
-			width = ((fh0[12] ? fh1 : fs0) & 16'hfc00) >> 10;
-			sprite_intersects_line = (width != 0)
-				&& wrapped_vertical_y_contains(first_line, height * 16,
-					used_line);
-		end
-		else begin
-			sy = fs1 & 16'h01ff;
-			if (sy & 9'h100) sy = sy - 512;
-			if (fh0[14]) sy = sy - 16'h90;
-			size_y = 1 << ((((fh0[12] ? fh2 : fs1) & 16'h0c00) >> 10));
-			first_line = (sy + (fh2 & 16'h01ff)) & 9'h1ff;
-			if (first_line & 9'h100) first_line = first_line - 512;
-			end_line = first_line + size_y * 8 - 1;
-			sprite_intersects_line = wrapped_vertical_y_contains(
-				first_line, size_y * 8, used_line);
-		end
+		used_line = sprite_source_line(fh0[14], physical_line, y_offset, y_zoom);
+		first_line = sprite_first_line(fh0[14], fh2, fs1);
+		height = sprite_height_pixels(fh0[12], fh3[15], fh2, fs1);
+		width = sprite_width_tiles(fh0[12], fh3[15], fh1, fs0);
+		sprite_intersects_line = (!fh3[15] || (width != 0))
+			&& wrapped_vertical_y_contains(first_line, height, used_line);
 	end
 endfunction
 
@@ -780,31 +807,20 @@ always_ff @(posedge clk) begin
 				// screen flip/offset. Its programmed values transform visible
 				// line Y to source line Y+128. Header bit 14 bypasses the global
 				// transform and uses the physical raster line directly.
-				calc_y_base = (27'h7ffffff - video_y_offset) >> 16;
-				if (h0[14] || !video_y_zoom[26])
-					calc_used_line = logical_target_line;
-				else
-					calc_used_line = (logical_target_line + calc_y_base) & 11'h7ff;
+				calc_used_line = sprite_source_line(h0[14], logical_target_line,
+					video_y_offset, video_y_zoom);
+				calc_firstline = sprite_first_line(h0[14], h2, s1);
+				calc_span_height = sprite_height_pixels(use_global_size, h3[15], h2, s1);
 				if (h3[15]) begin
-					calc_sy = s1 & 16'h01ff;
-					if (calc_sy & 9'h100) calc_sy = calc_sy - 512;
-					if (h0[14]) calc_sy = calc_sy - 16'h90;
-					calc_sy = calc_sy & 9'h1ff;
-					if (calc_sy & 9'h100) calc_sy = calc_sy - 512;
-					calc_height = (((use_global_size ? h2 : s1)
-						& 16'hfc00) >> 10) + 1;
-					calc_firstline = (calc_sy + (h2 & 16'h01ff)) & 9'h1ff;
-					if (calc_firstline & 9'h100) calc_firstline = calc_firstline - 512;
-					calc_endline = calc_firstline + calc_height * 16 - 1;
 					calc_sx = s0 & 16'h03ff;
 					if (h0[14]) calc_sx = calc_sx - 16'h80;
-					calc_width = ((use_global_size ? h1 : s0) & 16'hfc00) >> 10;
+					calc_width = sprite_width_tiles(use_global_size, 1'b1, h1, s0);
 					calc_dest_x = (calc_sx + (h1 & 16'h03ff)) & 10'h3ff;
 					calc_dest_x = (calc_dest_x & 10'h1ff)
 						- (calc_dest_x & 10'h200);
 					if ((calc_width == 0)
 					    || !wrapped_vertical_y_contains(calc_firstline,
-					        calc_height * 16, calc_used_line))
+					        calc_span_height, calc_used_line))
 						state <= R_NEXT_SPRITE;
 					else begin
 						calc_scroll_y = s3 & 16'h01ff;
@@ -833,22 +849,13 @@ always_ff @(posedge clk) begin
 				end
 				else begin
 					float_mode <= 1'b0;
-					calc_sy = s1 & 16'h01ff;
-					if (calc_sy & 9'h100) calc_sy = calc_sy - 512;
-					if (h0[14]) calc_sy = calc_sy - 16'h90;
-					calc_size_y = 1 << (((use_global_size ? h2 : s1)
-						& 16'h0c00) >> 10);
-					calc_firstline = (calc_sy + (h2 & 16'h01ff)) & 9'h1ff;
-					if (calc_firstline & 9'h100) calc_firstline = calc_firstline - 512;
-					calc_endline = calc_firstline + calc_size_y * 8 - 1;
 					if (wrapped_vertical_y_contains(calc_firstline,
-					    calc_size_y * 8, calc_used_line)) begin
+					    calc_span_height, calc_used_line)) begin
 						normal_x_exp <= ((use_global_size ? h1 : s0)
 							& 16'h0c00) >> 10;
 						normal_y_exp <= ((use_global_size ? h2 : s1)
 							& 16'h0c00) >> 10;
-						calc_size_x = 1 << (((use_global_size ? h1 : s0)
-							& 16'h0c00) >> 10);
+						calc_size_x = sprite_width_tiles(use_global_size, 1'b0, h1, s0);
 						calc_sx = ((s0 + (h1 & 16'h03ff)) & 10'h1ff)
 							- ((s0 + (h1 & 16'h03ff)) & 10'h200);
 						if (h0[14]) calc_sx = calc_sx - 16'h80;

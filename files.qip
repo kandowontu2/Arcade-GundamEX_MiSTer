@@ -5,6 +5,7 @@ set_global_assignment -name SYSTEMVERILOG_FILE rtl/gd_analog_to_digital.sv
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/gd_dither_blend.sv
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/crt_vsize.sv
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/crt_adjust.sv
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/gd_crt_geometry.sv
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/gd_video_timing.sv
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/gd_raster_irq.sv
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/gd_rowscroll_history.sv

@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.0.6 - 2026-10-30
+
+- Normalize native active-low H/V sync to active-high pulses at the CRT
+  processing boundary, including the geometry-disabled mixer bypass. Keep
+  raster counters, game timing and both geometry processing stages unchanged.
+- Correct both MRA core identifiers to `GundamEX` so lookup also works after
+  Distribution removes `Arcade-` from the RBF filename; add horizontal rotation.
+- Install the ZIP's RBF as `GundamEX_20261030.rbf`, matching Distribution and
+  preventing older unprefixed test files from shadowing a prefixed download.
+- Add the template's root `clean.bat`, anchored to its own project directory.
+- Share sprite source-line, first-line, height and width calculations between
+  the visibility prefilter and drawing stage, without adding pipeline stages.
+- Add native-raster CRT integration, legacy sprite-geometry equivalence and
+  MRA metadata/lookup regressions; build a new release from these sources.
+- EEPROM persistence and a framework refresh remain separate follow-ups.
+
 ## 1.0.5 packaging refresh - 2026-10-09
 
 - Correct updater discovery by renaming the existing bitstream to

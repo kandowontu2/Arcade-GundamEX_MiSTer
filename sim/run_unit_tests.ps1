@@ -81,6 +81,13 @@ if ($LASTEXITCODE -ne 0) { throw 'Video timing unit-test compilation failed' }
 & $vvp $output
 if ($LASTEXITCODE -ne 0) { throw 'Video timing unit test failed' }
 
+$output = Join-Path $PSScriptRoot 'crt_geometry.out'
+& $iverilog -g2012 -s tb_gd_crt_geometry -o $output rtl/gd_video_timing.sv rtl/crt_vsize.sv rtl/crt_adjust.sv rtl/gd_crt_geometry.sv sim/tb_gd_crt_geometry.sv
+if ($LASTEXITCODE -ne 0) { throw 'CRT geometry integration compilation failed' }
+# This native-raster test is longer; flush case progress even into a log file.
+& $vvp -i $output
+if ($LASTEXITCODE -ne 0) { throw 'CRT geometry integration test failed' }
+
 $output = Join-Path $PSScriptRoot 'raster_irq.out'
 & $iverilog -g2012 -s tb_gd_raster_irq -o $output rtl/gd_raster_irq.sv sim/tb_gd_raster_irq.sv
 if ($LASTEXITCODE -ne 0) { throw 'Raster IRQ unit-test compilation failed' }
@@ -136,6 +143,12 @@ $output = Join-Path $PSScriptRoot 'dx101_lookahead.out'
 if ($LASTEXITCODE -ne 0) { throw 'DX-101 look-ahead unit-test compilation failed' }
 & $vvp $output
 if ($LASTEXITCODE -ne 0) { throw 'DX-101 look-ahead unit test failed' }
+
+$output = Join-Path $PSScriptRoot 'sprite_geometry.out'
+& $iverilog -g2012 -s tb_gd_sprite_geometry -o $output rtl/gd_dx101_video.sv sim/tb_gd_sprite_geometry.sv
+if ($LASTEXITCODE -ne 0) { throw 'Sprite geometry unit-test compilation failed' }
+& $vvp $output
+if ($LASTEXITCODE -ne 0) { throw 'Sprite geometry unit test failed' }
 
 $output = Join-Path $PSScriptRoot 'sprite_ram.out'
 & $iverilog -g2012 -s tb_gd_sprite_ram -o $output rtl/gd_sprite_ram.sv sim/tb_gd_sprite_ram.sv

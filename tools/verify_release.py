@@ -12,6 +12,7 @@ import zipfile
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 CORE = "Arcade-GundamEX"
+MRA_TARGET = "GundamEX"
 MRA = "Mobile Suit Gundam EX Revue.mra"
 DOCS = {"README.txt": "RELEASE_NOTES.md", "CREDITS.md": "CREDITS.md",
         "LICENSE": "LICENSE", "SHA256SUMS.txt": "SHA256SUMS.txt"}
@@ -27,15 +28,15 @@ def release_rbf_name(releases: pathlib.Path) -> str:
     return name
 
 
-def verify(version: str, archive: pathlib.Path | None) -> None:
-    rbf = release_rbf_name(ROOT / "releases")
-    deploy = {f"_Arcade/cores/{rbf}": f"releases/{rbf}",
-              f"_Arcade/{MRA}": f"releases/{MRA}"}
-    assert {p.name for p in (ROOT / "releases").iterdir()} == {rbf, MRA}, "Unexpected release files"
-    data = (ROOT / "releases" / MRA).read_bytes()
-    assert data == (ROOT / "mra" / MRA).read_bytes(), "MRA copies differ"
+def deploy_rbf_name(rbf: str) -> str:
+    """Match Distribution's installed name, not its prefixed repository name."""
+    return rbf.removeprefix("Arcade-")
+
+
+def verify_mra_metadata(data: bytes) -> None:
     mra = ET.fromstring(data)
-    assert mra.findtext("rbf") == CORE, "MRA target must remain undated"
+    assert mra.findtext("rbf") == MRA_TARGET, "MRA target must omit Arcade- and date"
+    assert mra.findtext("rotation") == "horizontal", "Missing horizontal rotation"
     assert mra.findtext("name") == "Mobile Suit Gundam EX Revue", "Private MRA name"
     assert mra.find("about").attrib["author"] == "OpenAI Codex and kandowontu", "Author credit"
     rom = mra.find("rom")
@@ -45,6 +46,16 @@ def verify(version: str, archive: pathlib.Path | None) -> None:
     cheats = mra.find("cheats")
     assert cheats.attrib == {"size": "16", "max": "8"} and len(cheats) == 4, "Cheat format"
     assert all(re.fullmatch(r"[0-9A-Fa-f]{32}", "".join(c.itertext()).replace(" ", "").strip()) for c in cheats), "Cheat packets"
+
+
+def verify(version: str, archive: pathlib.Path | None) -> None:
+    rbf = release_rbf_name(ROOT / "releases")
+    deploy = {f"_Arcade/cores/{deploy_rbf_name(rbf)}": f"releases/{rbf}",
+              f"_Arcade/{MRA}": f"releases/{MRA}"}
+    assert {p.name for p in (ROOT / "releases").iterdir()} == {rbf, MRA}, "Unexpected release files"
+    data = (ROOT / "releases" / MRA).read_bytes()
+    assert data == (ROOT / "mra" / MRA).read_bytes(), "MRA copies differ"
+    verify_mra_metadata(data)
     top = (ROOT / "GundamEX.sv").read_text()
     assert f'"v,{version};"' in top and '"Gundam EX Revue;;"' in top, "OSD identity"
     assert not any(x in top for x in ("Capture Test", "GUNDAM_SDRAM_CAPTURE_TEST")), "Private test in top"

@@ -55,7 +55,7 @@ localparam CONF_STR = {
 	"R[0],Reset and close OSD;",
 	"J1,Attack 1,Attack 2,Attack 3,Attack 4,Start,Coin,Service;",
 	"jn,A,B,X,Y,Start,Select,R;",
-	"v,1.0.5;",
+	"v,1.0.6;",
 	"V,v",`BUILD_DATE
 };
 
@@ -211,7 +211,7 @@ wire [2:0] scanline_level = video_fx ? video_fx - 3'd1 : 3'd0;
 
 // CRT geometry is applied only to the completed video stream. Game raster,
 // interrupts, sound and the selected CPU rate remain untouched. With geometry
-// disabled the final mixer receives the original core signals directly.
+// disabled RGB/blanking bypass geometry; sync is still normalized for the mixer.
 wire crt_geometry = status[27];
 wire signed [4:0] crt_hsize = {{1{status[13]}}, status[13:10]};
 wire signed [8:0] crt_hshift = {{5{status[17]}}, status[17:14]};
@@ -224,81 +224,15 @@ wire signed [5:0] crt_vsize_scaled_step =
 wire signed [5:0] crt_vsize = -(crt_vsize_scaled_step
 	+ (crt_vsize_scaled_step <<< 1));
 
-wire [7:0] crt_vz_red;
-wire [7:0] crt_vz_green;
-wire [7:0] crt_vz_blue;
-wire crt_vz_hsync;
-wire crt_vz_vsync;
-wire crt_vz_de;
-wire crt_vz_vblank;
-wire crt_vz_ce;
-
-// PVM mode changes line cadence while preserving unique source lines.
-// Cabinet mode keeps native sync and simulates tube geometry photometrically.
-crt_vsize #(.RING_LINES(22), .LINE_PX(384)) crt_vertical
-(
-	.clk(clk_sys), .pxl_cen(ce_pix), .active(crt_geometry),
-	.tube_mode(status[25]), .vsize(crt_vsize),
-	.r_in(red), .g_in(green), .b_in(blue),
-	.hs_in(hsync), .vs_in(vsync), .de_in(~(hblank | vblank)),
-	.vb_in(vblank), .r_out(crt_vz_red), .g_out(crt_vz_green),
-	.b_out(crt_vz_blue), .hs_out(crt_vz_hsync),
-	.vs_out(crt_vz_vsync), .de_out(crt_vz_de),
-	.vb_out(crt_vz_vblank), .ce_out(crt_vz_ce)
+wire video_ce, video_hsync, video_vsync, video_hblank, video_vblank;
+wire [7:0] video_red, video_green, video_blue;
+gd_crt_geometry geometry (
+	.clk_sys, .reset, .ce_pix, .hsync_n(hsync), .vsync_n(vsync),
+	.hblank, .vblank, .red, .green, .blue, .crt_geometry,
+	.tube_mode(status[25]), .crt_hsize, .crt_hshift, .crt_vshift, .crt_vsize,
+	.video_ce, .video_hsync, .video_vsync, .video_hblank, .video_vblank,
+	.video_red, .video_green, .video_blue
 );
-
-wire crt_hs_reference;
-logic crt_hs_reference_d;
-logic [7:0] crt_read_accumulator;
-wire crt_hs_reference_rise = crt_hs_reference
-	&& !crt_hs_reference_d;
-// Native pixels arrive every eight clk_sys cycles. Quarter-clock arithmetic
-// gives one signed H-size step roughly 3.1 percent of the native pixel period.
-wire [7:0] crt_read_period = 8'd32
-	+ {{3{crt_hsize[4]}}, crt_hsize};
-wire [8:0] crt_read_sum = {1'b0, crt_read_accumulator} + 9'd4;
-wire crt_read_tick = (crt_read_sum >= {1'b0, crt_read_period});
-
-always_ff @(posedge clk_sys) begin
-	crt_hs_reference_d <= crt_hs_reference;
-	if (reset || crt_hs_reference_rise)
-		crt_read_accumulator <= 8'd0;
-	else if (crt_read_tick)
-		crt_read_accumulator <= crt_read_sum[7:0] - crt_read_period;
-	else
-		crt_read_accumulator <= crt_read_sum[7:0];
-end
-
-wire [7:0] crt_out_red;
-wire [7:0] crt_out_green;
-wire [7:0] crt_out_blue;
-wire crt_out_hsync;
-wire crt_out_vsync;
-wire crt_out_hblank;
-wire crt_out_vblank;
-
-crt_adjust #(
-	.VTOTAL(256), .HTOTAL(512), .HPOS_MODE(1)
-) crt_horizontal (
-	.clk(clk_sys), .pxl_cen(crt_vz_ce), .pxl2_cen(crt_read_tick),
-	.active(crt_geometry), .hsize(crt_hsize), .hoffset(crt_hshift),
-	.voffset(crt_vshift), .r_in(crt_vz_red), .g_in(crt_vz_green),
-	.b_in(crt_vz_blue), .hs_in(crt_vz_hsync), .vs_in(crt_vz_vsync),
-	.hb_in(~crt_vz_de), .vb_in(crt_vz_vblank), .r_out(crt_out_red),
-	.g_out(crt_out_green), .b_out(crt_out_blue),
-	.hs_out(crt_out_hsync), .vs_out(crt_out_vsync),
-	.hb_out(crt_out_hblank), .vb_out(crt_out_vblank),
-	.hs_ref_out(crt_hs_reference)
-);
-
-wire video_ce = crt_geometry ? crt_read_tick : ce_pix;
-wire [7:0] video_red = crt_geometry ? crt_out_red : red;
-wire [7:0] video_green = crt_geometry ? crt_out_green : green;
-wire [7:0] video_blue = crt_geometry ? crt_out_blue : blue;
-wire video_hsync = crt_geometry ? crt_out_hsync : hsync;
-wire video_vsync = crt_geometry ? crt_out_vsync : vsync;
-wire video_hblank = crt_geometry ? crt_out_hblank : hblank;
-wire video_vblank = crt_geometry ? crt_out_vblank : vblank;
 
 // The instruction panels use a dense one-pixel checkerboard that a CRT blends
 // naturally but that aliases into wide bands under some HDMI scaler profiles.

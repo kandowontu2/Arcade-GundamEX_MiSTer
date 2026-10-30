@@ -14,9 +14,13 @@ No copyrighted game ROMs are included in this project.
 
 ## Status
 
+Version 1.0.6 corrects CRT sync polarity, MRA lookup/rotation metadata and
+duplicated sprite geometry from the 2026-10-30 review. See
+[review validation and follow-ups](docs/REVIEW_FIXES.md).
+
 The core boots and runs on a DE10-Nano with video, stereo audio, both players,
-service functions, and direct MRA loading. Version 1.0.5 fixes graphics SDRAM
-input capture for affected integrated-memory systems using a fixed falling-edge
+service functions, and direct MRA loading. It retains the v1.0.5 graphics SDRAM
+input-capture fix for affected integrated-memory systems using a fixed falling-edge
 DDIO path. It retains the MRA cheats and fast-loader fixes from v1.0.3/1.0.4.
 One dated RBF and undated MRA are supplied for DE10-Nano and compatible systems;
 no DIP changes, alternate build, or user-selected memory phase is required.
@@ -24,8 +28,8 @@ See [SDRAM compatibility and validation](docs/SDRAM_COMPATIBILITY.md) for the
 hardware evidence and the limits of the timing checks.
 The core uses a 21-line DX-101 render reservoir plus open-page graphics SDRAM
 transfers to prevent the repeated/corrupt scanlines previously seen in battle scenes. The
-complete focused RTL regression suite passes and Quartus Prime Lite 17.0 closes
-timing.
+complete focused RTL regression suite passes. Exact-build Quartus timing and
+hardware validation scope are recorded in [release validation](docs/RELEASE_VALIDATION.md).
 
 The core uses the standard MiSTer framework directly. It contains no Jotego or
 JTFRAME code, runtime, branding, or background assets. During ROM transfer the
@@ -34,7 +38,7 @@ over a neutral black video background.
 
 ## Install
 
-1. Copy `Arcade-GundamEX_20261005.rbf` to `/media/fat/_Arcade/cores/`.
+1. Copy the ZIP's `GundamEX_20261030.rbf` to `/media/fat/_Arcade/cores/`.
 2. Copy `Mobile Suit Gundam EX Revue.mra` to `/media/fat/_Arcade/`.
 3. Put a legally obtained, unmodified `gundamex.zip` in
    `/media/fat/games/mame/`.
@@ -138,7 +142,7 @@ The project targets the Cyclone V `5CSEBA6U23I7` and Quartus Prime Lite 17.0:
 quartus_sh --flow compile GundamEX
 ```
 
-Build results and validation for v1.0.5 are recorded in
+Build results and validation for v1.0.6 are recorded in
 [release validation](docs/RELEASE_VALIDATION.md). After compiling, verify the
 fitted falling-edge input registers with:
 
@@ -150,17 +154,17 @@ For the checked release workflow from a Git checkout on Windows, use the
 installed Quartus path:
 
 ```powershell
-./scripts/build_release.ps1 -Version 1.0.5 -QuartusDirectory "C:/intelFPGA_lite/17.0/quartus" -UpdateReleaseArtifacts
+./scripts/build_release.ps1 -Version 1.0.6 -QuartusDirectory "C:/intelFPGA_lite/17.0/quartus" -UpdateReleaseArtifacts
 # Review internal timing and update docs/RELEASE_VALIDATION.md, then stage source:
 # Keep only the current dated RBF in releases; Git retains older builds.
 git add .
-./scripts/package_release.ps1 -Version 1.0.5
+./scripts/package_release.ps1 -Version 1.0.6
 ```
 
 The optional `-RomArchive` argument performs the independent local ROM check.
 Packaging refuses failed regressions, internal timing violations, missing F0
 capture audit, changed fitted source or mismatched compressed exports. It
-produces install/source ZIPs and checksums in `release/v1.0.5/`; it does not
+produces install/source ZIPs and checksums in `release/v1.0.6/`; it does not
 publish or submit anything by itself.
 
 ## Tests
@@ -201,16 +205,24 @@ are regression stimuli, not an electrical model of a particular board.
 The repository keeps one dated RBF and undated MRA in `releases/`, native source in
 `rtl/`, the vendored MiSTer framework in `sys/`, and source MRA in `mra/`.
 The install ZIP uses SD-card-root paths `_Arcade/` and `_Arcade/cores/`.
+As in Distribution, the ZIP's installed RBF omits `Arcade-`; it is byte-identical
+to the prefixed RBF in `releases/`. This avoids old unprefixed test files taking
+precedence over a newer prefixed download in Main's core lookup.
 See [the upstream checklist](docs/UPSTREAM_READINESS.md) and
 `scripts/package_release.ps1` for repeatable packaging. Preparation does not
 constitute MiSTer-devel acceptance; no PR has been submitted.
 
 RBF filenames follow the [MiSTer template](https://github.com/MiSTer-devel/Template_MiSTer#source-structure)
 convention `Arcade-GundamEX_YYYYMMDD.rbf`. The MRA target remains
-`Arcade-GundamEX`, without a date or extension. The official distribution
+`GundamEX`, without the `Arcade-` prefix, date or extension. The official distribution
 collector skips undated core binaries; dated naming enables discovery once
 the repository is included in its configured sources. Renaming alone does not
 register an independent repository with Update All or the default database.
+
+The root `clean.bat` supplies the standard MiSTer template cleanup commands
+for generated Quartus files. It anchors cleanup to its own project directory,
+even when launched from another working directory. A clean requires rebuilding
+before the checked release-packaging workflow can be used again.
 
 ## Source and licensing
 

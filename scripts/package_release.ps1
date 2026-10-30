@@ -1,6 +1,6 @@
 param(
     [ValidatePattern('^\d+\.\d+\.\d+$')]
-    [string]$Version = '1.0.5',
+    [string]$Version = '1.0.6',
     [string]$OutputDirectory
 )
 # OpenAI Codex and kandowontu; SPDX-License-Identifier: GPL-3.0-or-later
@@ -25,7 +25,7 @@ foreach ($type in @('Setup', 'Hold', 'Recovery', 'Removal', 'Minimum Pulse Width
 $audit = Get-Content -LiteralPath (Join-Path $build 'sdram-f0-audit.log') -Raw
 if ($audit -notmatch 'PASS: sixteen fixed F0 input captures' -or $audit -match '(?m)^Error') { throw 'Fitted F0 audit failed' }
 $tests = Get-Content -LiteralPath (Join-Path $build "v$Version-tests.log") -Raw
-if ([regex]::Matches($tests, '(?m)^[^\r\n]*PASS').Count -ne 21 -or
+if ([regex]::Matches($tests, '(?m)^[^\r\n]*PASS').Count -ne 23 -or
     $tests -match '(?im)^(FATAL:|FAIL(?:ED)?\b|Exception:)') { throw 'Production regressions did not pass' }
 if ((Get-Content -LiteralPath (Join-Path $root 'docs/RELEASE_VALIDATION.md') -Raw) -match 'compile and fitted-register audit are pending') {
     throw 'Validation documentation is incomplete'
@@ -39,6 +39,7 @@ if ($releaseRbfs.Count -ne 1 -or $releaseRbfs[0].Name -cnotmatch '^Arcade-Gundam
     throw 'Expected one dated Arcade-GundamEX_YYYYMMDD.rbf in releases'
 }
 $rbfName = $releaseRbfs[0].Name
+$installRbfName = $rbfName.Substring('Arcade-'.Length)
 $rbf = $releaseRbfs[0].FullName
 $buildId = Get-Content -LiteralPath (Join-Path $root 'build_id.v') -Raw
 if ($buildId -notmatch 'BUILD_DATE\s+"(\d{6})"' -or $rbfName -ne "Arcade-GundamEX_20$($Matches[1]).rbf") {
@@ -69,7 +70,7 @@ try {
     $archive = [System.IO.Compression.ZipFile]::Open($zip, [System.IO.Compression.ZipArchiveMode]::Create)
     try {
         foreach ($pair in @(
-            @("releases/$rbfName", "_Arcade/cores/$rbfName"),
+            @("releases/$rbfName", "_Arcade/cores/$installRbfName"),
             @("releases/$mraName", "_Arcade/$mraName"),
             @('RELEASE_NOTES.md', 'README.txt'), @('CREDITS.md', 'CREDITS.md'),
             @('LICENSE', 'LICENSE'), @('SHA256SUMS.txt', 'SHA256SUMS.txt')

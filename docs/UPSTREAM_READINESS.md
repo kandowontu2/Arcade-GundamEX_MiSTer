@@ -9,11 +9,12 @@ MiSTer-devel contribution. No PR is submitted by the release workflow.
 - [x] Source-only development files in `rtl/`, `sys/`, `sim/`, `tools/`
   and `scripts/`; required generated PLL IP and upstream notices retained.
 - [x] One current dated RBF and undated MRA in `releases/`:
-  `Arcade-GundamEX_20261005.rbf` and
+  `Arcade-GundamEX_20261030.rbf` and
   `Mobile Suit Gundam EX Revue.mra`.
 - [x] Source MRA in `mra/`; release copy checked for byte identity.
-- [x] ZIP rooted at `_Arcade/`, with the RBF in `_Arcade/cores/`.
-- [x] MRA targets `Arcade-GundamEX`; original ROM filename/CRCs, fast-loader
+- [x] ZIP rooted at `_Arcade/`, with the identical RBF installed under
+  `_Arcade/cores/GundamEX_20261030.rbf`, matching Distribution's stripped prefix.
+- [x] MRA targets `GundamEX` and declares horizontal rotation; original ROM filename/CRCs, fast-loader
   address, buttons, DIP switches, service controls and MRA cheats retained.
 - [x] Contributor name is **kandowontu**. **kandowontu2** is the hosting
   account, not a replacement author credit.
@@ -36,7 +37,10 @@ entry is still needed for updater inclusion; none has been submitted.
 
 ## Before an eventual fork/transfer
 
-- [ ] Confirm the exact published v1.0.5 RBF on an ordinary MiSTer and the
+- [x] Exact v1.0.6 RBF loaded on the user's MiSTer, with verified upload
+  hash, cold MRA boot, source-frame attract gameplay, six geometry settings,
+  rotation and the service startup screen; original settings restored.
+- [ ] Confirm the exact published v1.0.6 RBF on an ordinary MiSTer and the
   affected integrated-SDRAM system, not just the earlier private test fit.
 - [ ] Exercise HDMI and native analog video, both players, audio, service
   mode, cheats, warm reset and cold ROM loading; record Main version and
