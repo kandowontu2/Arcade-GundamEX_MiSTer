@@ -21,6 +21,7 @@ set_global_assignment -name SYSTEMVERILOG_FILE rtl/gd_x1_010.sv
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/gd_dx101_video.sv
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/gd_tmp68301.sv
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/gd_93c46.sv
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/gd_eeprom_nvram.sv
 set_global_assignment -name SEARCH_PATH rtl/fx68k/hdl
 set_global_assignment -name SEARCH_PATH rtl/fx68k/hdl/verilator
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/fx68k/hdl/verilator/fx68k.sv

@@ -39,6 +39,12 @@ def verify_mra_metadata(data: bytes) -> None:
     assert mra.findtext("rotation") == "horizontal", "Missing horizontal rotation"
     assert mra.findtext("name") == "Mobile Suit Gundam EX Revue", "Private MRA name"
     assert mra.find("about").attrib["author"] == "OpenAI Codex and kandowontu", "Author credit"
+    assert mra.find("buttons").attrib == {
+        "names": "Weak Attack,Medium Attack,Strong Attack,Throw,Start,Coin,Service",
+        "default": "A,B,X,Y,Start,Select,R"}, "Control card labels/mapping"
+    assert mra.find("nvram") is not None and mra.find("nvram").attrib == {
+        "index": "4", "size": "128"}, "EEPROM NVRAM channel/size"
+    assert list(mra).index(mra.find("nvram")) < list(mra).index(mra.find("rom")), "Restore must precede ROM replay"
     rom = mra.find("rom")
     assert rom.attrib == {"index": "0", "address": "0x30000000", "zip": "gundamex.zip", "md5": "none"}, "ROM loading changed"
     parts = rom.findall(".//part")

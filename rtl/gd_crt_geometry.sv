@@ -25,6 +25,7 @@ wire crt_vz_vsync;
 wire crt_vz_de;
 wire crt_vz_vblank;
 wire crt_vz_ce;
+wire [9:0] crt_frame_lines;
 
 // PVM mode changes line cadence while preserving unique source lines.
 // Cabinet mode keeps native sync and simulates tube geometry photometrically.
@@ -37,7 +38,7 @@ crt_vsize #(.RING_LINES(22), .LINE_PX(384)) crt_vertical
 	.vb_in(vblank), .r_out(crt_vz_red), .g_out(crt_vz_green),
 	.b_out(crt_vz_blue), .hs_out(crt_vz_hsync),
 	.vs_out(crt_vz_vsync), .de_out(crt_vz_de),
-	.vb_out(crt_vz_vblank), .ce_out(crt_vz_ce)
+	.vb_out(crt_vz_vblank), .ce_out(crt_vz_ce), .frame_lines(crt_frame_lines)
 );
 
 wire crt_hs_reference;
@@ -75,7 +76,8 @@ crt_adjust #(
 ) crt_horizontal (
 	.clk(clk_sys), .pxl_cen(crt_vz_ce), .pxl2_cen(crt_read_tick),
 	.active(crt_geometry), .hsize(crt_hsize), .hoffset(crt_hshift),
-	.voffset(crt_vshift), .r_in(crt_vz_red), .g_in(crt_vz_green),
+	.voffset(crt_vshift), .frame_lines(crt_frame_lines),
+	.r_in(crt_vz_red), .g_in(crt_vz_green),
 	.b_in(crt_vz_blue), .hs_in(crt_vz_hsync), .vs_in(crt_vz_vsync),
 	.hb_in(~crt_vz_de), .vb_in(crt_vz_vblank), .r_out(crt_out_red),
 	.g_out(crt_out_green), .b_out(crt_out_blue),

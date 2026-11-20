@@ -24,6 +24,12 @@ module gd_core
 	input  logic [26:0] rom_addr,
 	input  logic  [7:0] rom_data,
 	output logic        rom_wait,
+	input  logic        nvram_download, nvram_upload, nvram_wr, nvram_rd,
+	input  logic [15:0] nvram_index,
+	input  logic [26:0] nvram_addr,
+	input  logic [7:0]  nvram_dout,
+	output wire [7:0]   nvram_din,
+	output wire         nvram_upload_req,
 
 	output logic        ddr_clk,
 	input  logic        ddr_busy,
@@ -197,7 +203,9 @@ gd_ddr_memory rom_memory
 	assign adaptor_ddr_rdata_ready = ddr_dout_ready
 		&& adaptor_ddr_selected;
 
-	wire runtime_reset = reset || !memory_ready || !rom_ready || loader_busy;
+	wire nvram_restore_busy;
+	wire runtime_reset = reset || !memory_ready || !rom_ready || loader_busy
+		|| nvram_restore_busy;
 logic raster_irq;
 logic [15:0] video_control;
 logic [26:0] video_x_offset;
@@ -254,11 +262,15 @@ logic eeprom_do;
 
 assign video_reg_address = 5'd0;
 
-gd_93c46 eeprom
+gd_eeprom_nvram persistent_eeprom
 (
-	.clk, .reset(cold_reset || rom_downloading),
-	.load_wr(eeprom_load_wr), .load_addr(eeprom_load_addr),
-	.load_data(eeprom_load_data), .chip_select(eeprom_cs),
+	.clk, .cold_reset, .factory_ready(rom_ready && !loader_busy && !rom_downloading),
+	.factory_wr(eeprom_load_wr), .factory_addr(eeprom_load_addr),
+	.factory_data(eeprom_load_data), .ioctl_download(nvram_download),
+	.ioctl_upload(nvram_upload), .ioctl_wr(nvram_wr), .ioctl_rd(nvram_rd),
+	.ioctl_index(nvram_index), .ioctl_addr(nvram_addr), .ioctl_dout(nvram_dout),
+	.ioctl_din(nvram_din), .upload_req(nvram_upload_req),
+	.restore_busy(nvram_restore_busy), .chip_select(eeprom_cs),
 	.serial_clock(eeprom_clk), .data_in(eeprom_di), .data_out(eeprom_do)
 );
 

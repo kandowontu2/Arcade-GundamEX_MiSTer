@@ -1,6 +1,6 @@
 <misterromdescription>
   <name>Mobile Suit Gundam EX Revue</name>
-  <mratimestamp>202610300001</mratimestamp>
+  <mratimestamp>202611190001</mratimestamp>
   <mameversion>0287</mameversion>
   <setname>gundamex</setname>
   <year>1994</year>
@@ -9,7 +9,9 @@
   <rbf>GundamEX</rbf>
   <rotation>horizontal</rotation>
   <about author="OpenAI Codex and kandowontu" webpage="https://github.com/kandowontu2/Arcade-GundamEX_MiSTer" />
-  <buttons names="Attack 1,Attack 2,Attack 3,Attack 4,Start,Coin,Service" default="A,B,X,Y,Start,Select,R" />
+  <buttons names="Weak Attack,Medium Attack,Strong Attack,Throw,Start,Coin,Service" default="A,B,X,Y,Start,Select,R" />
+  <!-- Stage saved EEPROM before ROM replay; apply after its factory image. -->
+  <nvram index="4" size="128" />
   <switches default="ff,ff" base="8">
     <dip bits="0" name="Demo Sounds" ids="Off,On" />
     <dip bits="1,2" name="Difficulty" ids="Hardest,Hard,Easy,Normal" />

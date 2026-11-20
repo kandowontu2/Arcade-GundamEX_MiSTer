@@ -119,9 +119,33 @@ game-specific modes need further refinement.
 
 The synthesizable 93C46 accepts the board's x16 Microwire command format:
 READ, WRITE, ERASE, EWEN, EWDS, ERAL, and WRAL, including sequential reads.
-The MRA's `eeprom.bin` initializes all 64 words during ROM download. Writes
-survive ordinary core reset but are not currently exported to an SD-card save
-file, so they are lost when the core is unloaded or the MiSTer is powered off.
+The MRA's `eeprom.bin` initializes all 64 words during ROM download. The new
+`<nvram index="4" size="128" />` declaration and `gd_eeprom_nvram` export and
+restore a byte-exact 128-byte image (high byte of each x16 word first).
+Existing ROM CRCs and factory bytes are unchanged.
+
+The NVRAM declaration precedes the ROM definition. Main therefore sends any
+saved image first; the FPGA stages a complete, ordered transfer and applies
+it only after the ROM loader finishes replaying all factory bytes. The CPU
+stays in runtime reset while restoration is pending or copying. Without an
+existing save the normal factory image boots. Short, overlong, or reordered
+transfers cannot partially overwrite the EEPROM. Indices 0, 254 and 255 remain
+separate ROM, DIP and cheat channels.
+
+WRITE, ERASE, WRAL and ERAL request a save; EWDS-protected writes and host
+loads do not. An upload freezes all 64 words at its start, so game writes
+during transfer cannot create a mixed-generation image; those later writes
+remain dirty and request a subsequent upload. Incomplete uploads do not
+clear dirty state. An ordinary game reset neither reloads memory nor clears
+an outstanding save request.
+
+MiSTer writes the image to
+`/media/fat/config/nvram/Mobile Suit Gundam EX Revue.nvm` on its usual arcade
+save path. After changing service settings, open the MiSTer OSD and let the
+Saving indication finish before switching cores or turning off power. The
+OSD's **Save settings** action also explicitly saves EEPROM. No helper script
+is required. Sudden power loss before that flush cannot be made persistent
+by FPGA logic alone. Renaming the MRA changes Main's associated save filename.
 
 ## Reference status
 

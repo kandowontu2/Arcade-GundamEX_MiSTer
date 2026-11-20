@@ -14,6 +14,12 @@ No copyrighted game ROMs are included in this project.
 
 ## Status
 
+Version 1.0.7 adds hardware-confirmed 128-byte EEPROM NVRAM saving/restoring, fixes
+negative PVM V Offset at non-native frame lengths, and uses the control card's
+Weak Attack / Medium Attack / Strong Attack / Throw labels. See
+[current change validation](docs/PVM_EEPROM_VALIDATION.md) and the
+[v1.0.7 release](https://github.com/kandowontu2/Arcade-GundamEX_MiSTer/releases/tag/v1.0.7).
+
 Version 1.0.6 corrects CRT sync polarity, MRA lookup/rotation metadata and
 duplicated sprite geometry from the 2026-10-30 review. See
 [review validation and follow-ups](docs/REVIEW_FIXES.md).
@@ -38,7 +44,7 @@ over a neutral black video background.
 
 ## Install
 
-1. Copy the ZIP's `GundamEX_20261030.rbf` to `/media/fat/_Arcade/cores/`.
+1. Copy the matching ZIP's `GundamEX_20261119.rbf` to `/media/fat/_Arcade/cores/`.
 2. Copy `Mobile Suit Gundam EX Revue.mra` to `/media/fat/_Arcade/`.
 3. Put a legally obtained, unmodified `gundamex.zip` in
    `/media/fat/games/mame/`.
@@ -56,10 +62,10 @@ falls back to ordinary byte-stream loading on older Main versions.
 
 | Game control | MiSTer default |
 |---|---|
-| Attack 1 | A |
-| Attack 2 | B |
-| Attack 3 | X |
-| Attack 4 | Y |
+| Weak Attack | A |
+| Medium Attack | B |
+| Strong Attack | X |
+| Throw | Y |
 | Start | Start |
 | Coin | Select |
 | Service | R |
@@ -102,7 +108,8 @@ scaling without altering short sprite details. It is deterministic and cannot
 be bypassed by status values saved from an older build.
 
 The **CRT Geometry** submenu provides signed H Size, H Offset, V Size, and V
-Offset controls. Leave the master switch **Off** for the untouched native
+Offset controls. Negative V Offset wraps using the active PVM frame length,
+including its per-frame size slew. Leave the master switch **Off** for the native
 stream. **PVM** V-size mode retimes line cadence while keeping every source
 line unique; **Cabinet** mode keeps native sync timing and simulates the tube's
 vertical geometry. Because this is a core-side stage, adjusted geometry is
@@ -115,10 +122,15 @@ TMP68301 timer rates stay native in every CPU mode.
 
 ## Implemented hardware
 
+Board settings are restored from the standard MiSTer `.nvm` save on relaunch.
+After changing them, open the MiSTer OSD and let **Saving...** finish before
+leaving the core or powering off; **Save settings** also explicitly saves them.
+See [EEPROM behavior](docs/HARDWARE.md#eeprom-behavior) for ordering and file path.
+
 - Toshiba TMP68301-compatible 68HC000 subsystem at 16.265235 MHz
 - TMP68301 interrupt controller, timers, and parallel GPIO
-- 93C46 x16 serial EEPROM with factory-image loading and write persistence
-  for the current core session
+- 93C46 x16 serial EEPROM with factory-image loading and standard MiSTer
+  NVRAM persistence (128-byte save, restored after factory replay)
 - NEC DX-101 / Allumer X1-020-compatible sprite and tile renderer
 - Seta X1-010-compatible 16-voice PCM audio and 2 MiB sample banking
 - 384 x 224 visible image on a 512 x 256 raster
@@ -142,7 +154,7 @@ The project targets the Cyclone V `5CSEBA6U23I7` and Quartus Prime Lite 17.0:
 quartus_sh --flow compile GundamEX
 ```
 
-Build results and validation for v1.0.6 are recorded in
+Build results and validation for the v1.0.7 release are recorded in
 [release validation](docs/RELEASE_VALIDATION.md). After compiling, verify the
 fitted falling-edge input registers with:
 
@@ -154,17 +166,17 @@ For the checked release workflow from a Git checkout on Windows, use the
 installed Quartus path:
 
 ```powershell
-./scripts/build_release.ps1 -Version 1.0.6 -QuartusDirectory "C:/intelFPGA_lite/17.0/quartus" -UpdateReleaseArtifacts
+./scripts/build_release.ps1 -Version 1.0.7 -QuartusDirectory "C:/intelFPGA_lite/17.0/quartus" -UpdateReleaseArtifacts
 # Review internal timing and update docs/RELEASE_VALIDATION.md, then stage source:
 # Keep only the current dated RBF in releases; Git retains older builds.
 git add .
-./scripts/package_release.ps1 -Version 1.0.6
+./scripts/package_release.ps1 -Version 1.0.7
 ```
 
 The optional `-RomArchive` argument performs the independent local ROM check.
 Packaging refuses failed regressions, internal timing violations, missing F0
 capture audit, changed fitted source or mismatched compressed exports. It
-produces install/source ZIPs and checksums in `release/v1.0.6/`; it does not
+produces install/source ZIPs and checksums in `release/v1.0.7/`; it does not
 publish or submit anything by itself.
 
 ## Tests
@@ -208,7 +220,8 @@ The install ZIP uses SD-card-root paths `_Arcade/` and `_Arcade/cores/`.
 As in Distribution, the ZIP's installed RBF omits `Arcade-`; it is byte-identical
 to the prefixed RBF in `releases/`. This avoids old unprefixed test files taking
 precedence over a newer prefixed download in Main's core lookup.
-See [the upstream checklist](docs/UPSTREAM_READINESS.md) and
+See [the maintainer review guide](docs/REVIEW_GUIDE.md),
+[the upstream checklist](docs/UPSTREAM_READINESS.md) and
 `scripts/package_release.ps1` for repeatable packaging. Preparation does not
 constitute MiSTer-devel acceptance; no PR has been submitted.
 

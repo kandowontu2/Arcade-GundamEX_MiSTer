@@ -1,65 +1,68 @@
-# Mobile Suit Gundam EX Revue MiSTer v1.0.6
+# Mobile Suit Gundam EX Revue MiSTer v1.0.7
 
-This release fixes CRT vertical-sizing sync polarity, corrects MRA lookup and
-rotation metadata, and shares sprite geometry calculations without changing
-the rendering pipeline stages. There is one shared build, with no
-board-dependent memory-phase setting.
+This release adds hardware-confirmed EEPROM persistence, fixes PVM vertical
+positioning, and corrects the four action labels. Source, credits and review
+guidance are included. No PR has been submitted to MiSTer-devel.
 
 ## Install
 
-1. Extract `Arcade-GundamEX_MiSTer_v1.0.6.zip` to the MiSTer SD-card root.
-   It installs `_Arcade/Mobile Suit Gundam EX Revue.mra` and
-   `_Arcade/cores/GundamEX_20261030.rbf`.
-2. Keep your supported, legally obtained `gundamex.zip` in `games/mame/`.
-3. Launch **Arcade > Mobile Suit Gundam EX Revue**.
+Extract the matching install ZIP at the MiSTer SD-card root. It supplies
+`_Arcade/cores/GundamEX_20261119.rbf` and
+`_Arcade/Mobile Suit Gundam EX Revue.mra`. Keep your legally obtained
+`gundamex.zip` in `games/mame/`, then launch the MRA from Arcade.
 
-Use the ZIP's installed filename, which matches MiSTer Distribution. The
-repository and standalone asset retain the standard
-`Arcade-GundamEX_20261030.rbf` name; the payload is identical. If installing
-that standalone asset manually, rename it to `GundamEX_20261030.rbf` so an
-older unprefixed test copy cannot take precedence during MRA lookup.
-Other Gundam games are separate cores and should not be removed.
+The repository/standalone RBF uses `Arcade-GundamEX_20261119.rbf` with identical
+bytes. Rename that standalone file to `GundamEX_20261119.rbf` for manual
+installation, matching Distribution and preventing an older unprefixed test
+file from taking precedence. Other Gundam games are separate cores.
+
+Install the new RBF and MRA together: the old published RBF does not implement
+the new EEPROM NVRAM channel. Source ROM CRCs and factory EEPROM data are
+unchanged. No game ROMs are included.
 
 ## Changes
 
-- Normalize native active-low H/V sync before both CRT processing stages.
-  Bypass also supplies positive sync to MiSTer's mixer, without changing its
-  pixels, blanking or pixel enable.
-- Correct both MRAs to target `GundamEX` and declare horizontal rotation.
-  Original ROM CRCs, DIP tables, buttons, cheats and contributor credits remain.
-- Share sprite source-line, signed/wrapped vertical bounds, height and width
-  calculations between the visibility scan and drawing stage; preserve stages.
-- Add root `clean.bat` using the standard template cleanup commands, anchored
-  to its own project directory.
-- Add native-raster PVM/Cabinet sizing tests, 8,192 sprite-equivalence vectors,
-  MRA lookup tests and isolated Windows cleanup tests.
-- Preserve fixed falling-edge graphics SDRAM capture, fast/legacy loading,
-  service menus, analog inputs, audio and 180-degree rotation.
+- Negative PVM V Offset wraps using the running frame length, including size
+  slew. At V Size +3 the frame is 247 lines; V Offset -1 advances sync one
+  line instead of delaying it by eight. Cabinet and bypass use native totals.
+- Both MRAs and fallback OSD labels now read Weak Attack, Medium Attack,
+  Strong Attack and Throw. The default A/B/X/Y assignment order is unchanged.
+- The 128-byte 93C46 image saves/restores through standard MiSTer arcade NVRAM.
+  Saved data is staged and applied after factory-ROM replay, before CPU
+  startup. Incomplete/reordered transfers and unrelated indices are ignored.
+- WRITE, ERASE, WRAL and ERAL request a save. Each upload uses an atomic
+  snapshot, with later writes requesting another save rather than being lost.
 
-## Validation
+## Saving board settings
 
-The new production fit passed all 33 internal timing checks and the fitted
-falling-edge SDRAM capture audit. All 23 RTL regression runs and 14 packaging,
-metadata and cleanup tests passed, including 8,192 sprite-equivalence vectors.
-The exact release RBF booted on the user's MiSTer with visible attract-mode
-gameplay, service-screen access, 180-degree rotation and all six PVM/Cabinet
-zero/positive/negative V Size configurations. Original settings were restored.
-Full results and test scope are in `docs/RELEASE_VALIDATION.md`.
+After changing settings in the game's service menu, open the MiSTer OSD and
+let **Saving...** finish before changing cores or switching off power.
+**Save settings** is also an explicit save path. Main uses
+`config/nvram/Mobile Suit Gundam EX Revue.nvm`, restored on subsequent launches.
+There is no helper script. Sudden power loss before the OSD flush is not
+covered; renaming the MRA changes the associated save filename.
 
-The inherited SDC leaves external SDRAM board I/O timing unconstrained.
-Internal closure cannot certify electrical margin on every board. Screenshot
-checks cannot certify the electrical analog output or every gameplay frame.
-This exact refit still needs independent SuperStation One/analog confirmation.
-See `docs/RELEASE_VALIDATION.md` for exact-build evidence and limitations.
+## Validation and limits
 
-## Known limits and credits
+All 25 RTL runs, 16 metadata/cleanup tests, 33 internal timing checks and the
+fitted SDRAM audit passed. The exact RBF booted on the user's MiSTer, including
+PVM +3 / V Offset -1 and service-screen access; original settings were restored.
+EEPROM persistence was confirmed on the actual device: CPU writes through
+the EEPROM GPIO, automatic OSD saves and two full Menu-core/relaunch cycles
+with all 128 bytes verified. No alternate FPGA build or pre-seeded save was
+used. Temporary verification files were removed and normal gameplay restored.
+Full scope is in `docs/PVM_EEPROM_VALIDATION.md` and
+`docs/RELEASE_VALIDATION.md`. Physical analog CRT and
+SuperStation One behavior require confirmation of this exact bitstream.
+External SDRAM board I/O remains unconstrained by the inherited SDC.
 
-EEPROM changes survive reset but are replaced on relaunch; persistent NVRAM
-and a full framework refresh are not included in this focused update.
-Cheats should be disabled during startup RAM checks. Native 15-kHz analog
-output normally uses **Scandoubler Fx: None**, with CRT Geometry initially Off.
+A full framework refresh remains a separate follow-up. Cheats should be
+turned off for startup RAM checks. Native analog output normally uses
+Scandoubler Fx: None, with CRT Geometry initially Off.
 
-Credit remains **kandowontu**; **kandowontu2** is the hosting account only.
-Full third-party, FPGA IP, hardware-reference and tester credits are included
-in `CREDITS.md` and `UPSTREAM.md`. No game ROMs or private diagnostics are in
-the release. No PR has been submitted to MiSTer-devel.
+Credit remains **kandowontu**; **kandowontu2** is only the hosting account.
+Third-party, FPGA IP and tester credits are retained in `CREDITS.md` and
+`UPSTREAM.md`. Maintainers can start with `docs/REVIEW_GUIDE.md` and
+`docs/UPSTREAM_READINESS.md`. No private capture diagnostics or game ROMs are
+distributed. Repository preparation does not imply MiSTer-devel acceptance
+or registration with the default updater database.

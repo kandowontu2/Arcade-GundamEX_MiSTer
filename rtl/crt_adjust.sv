@@ -121,6 +121,7 @@ module crt_adjust #(
                                      //   stays native (>0 right, <0 left). See HPOS_MODE.
     input  signed [5:0] voffset,     // V-Shift: sposta il VSync di N righe (signed).
                                      // >0 = giu`, <0 = su. Verticale non desincronizza.
+    input        [9:0] frame_lines, // upstream's active frame total, including PVM slew
 
     input        [7:0] r_in,
     input        [7:0] g_in,
@@ -339,17 +340,23 @@ module crt_adjust #(
     //  linea (voffset signed). Sposta il VSync, non il contenuto: verticalmente
     //  il CRT ha ampia tolleranza -> nessun desync. hs_rise_in = fine riga.
     // ------------------------------------------------------------------
-    wire signed [8:0] vshift_tap = voffset[5]
-        ? (9'(VTOTAL) + {{3{voffset[5]}}, voffset})   // negativo -> VTOTAL - |N|
-        : {3'd0, voffset};                            // positivo -> N
-    reg [VTOTAL-1:0] vsync_line_shreg;
+    // A negative shift wraps through the ACTIVE frame, not the native
+    // VTOTAL. PVM +3 produces 247 lines here, so -1 needs tap 246, not 255.
+    // Keep headroom for enlarged frame totals as well as reduced ones.
+    localparam integer VSHIFT_DEPTH = VTOTAL + 32;
+    wire [9:0] active_frame_lines = (frame_lines != 0
+        && frame_lines <= VSHIFT_DEPTH) ? frame_lines : 10'(VTOTAL);
+    wire [9:0] vshift_tap = voffset[5]
+        ? (active_frame_lines + {{4{voffset[5]}}, voffset})
+        : {4'd0, voffset};
+    reg [VSHIFT_DEPTH-1:0] vsync_line_shreg;
     initial vsync_line_shreg = 0;
     always @(posedge clk) if (hs_rise_in)
-        vsync_line_shreg <= {vsync_line_shreg[VTOTAL-2:0], vs_in};
+        vsync_line_shreg <= {vsync_line_shreg[VSHIFT_DEPTH-2:0], vs_in};
     reg vs_shifted;
     initial vs_shifted = 0;
     always @(posedge clk) if (hs_rise_in)
-        vs_shifted <= (vshift_tap == 9'd0) ? vs_in : vsync_line_shreg[vshift_tap - 9'd1];
+        vs_shifted <= (vshift_tap == 10'd0) ? vs_in : vsync_line_shreg[vshift_tap - 10'd1];
 
     // HSync emitted by the module: shifted only in HPOS_SYNCSHIFT, else native.
     // (hsync_pix_shreg / hs_shifted are computed above, before the read side.)

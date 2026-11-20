@@ -75,6 +75,12 @@ if ($LASTEXITCODE -ne 0) { throw 'EEPROM unit-test compilation failed' }
 & $vvp $output
 if ($LASTEXITCODE -ne 0) { throw 'EEPROM unit test failed' }
 
+$output = Join-Path $PSScriptRoot 'eeprom_nvram.out'
+& $iverilog -g2012 -s tb_gd_eeprom_nvram -o $output $testHps rtl/gd_93c46.sv rtl/gd_eeprom_nvram.sv sim/tb_gd_eeprom_nvram.sv
+if ($LASTEXITCODE -ne 0) { throw 'EEPROM NVRAM protocol compilation failed' }
+& $vvp $output
+if ($LASTEXITCODE -ne 0) { throw 'EEPROM NVRAM protocol test failed' }
+
 $output = Join-Path $PSScriptRoot 'video_timing.out'
 & $iverilog -g2012 -s tb_gd_video_timing -o $output rtl/gd_video_timing.sv sim/tb_gd_video_timing.sv
 if ($LASTEXITCODE -ne 0) { throw 'Video timing unit-test compilation failed' }
@@ -87,6 +93,12 @@ if ($LASTEXITCODE -ne 0) { throw 'CRT geometry integration compilation failed' }
 # This native-raster test is longer; flush case progress even into a log file.
 & $vvp -i $output
 if ($LASTEXITCODE -ne 0) { throw 'CRT geometry integration test failed' }
+
+$output = Join-Path $PSScriptRoot 'crt_vertical_offset.out'
+& $iverilog -g2012 -s tb_crt_vertical_offset -o $output rtl/crt_adjust.sv sim/tb_crt_vertical_offset.sv
+if ($LASTEXITCODE -ne 0) { throw 'CRT vertical offset compilation failed' }
+& $vvp -i $output
+if ($LASTEXITCODE -ne 0) { throw 'CRT vertical offset test failed' }
 
 $output = Join-Path $PSScriptRoot 'raster_irq.out'
 & $iverilog -g2012 -s tb_gd_raster_irq -o $output rtl/gd_raster_irq.sv sim/tb_gd_raster_irq.sv

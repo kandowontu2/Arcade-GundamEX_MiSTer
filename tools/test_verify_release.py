@@ -75,6 +75,18 @@ class MraMetadataTests(unittest.TestCase):
         with self.assertRaisesRegex(AssertionError, "rotation"):
             verify_mra_metadata(data)
 
+    def test_generic_attack_labels_are_rejected(self):
+        data = (ROOT / "mra" / MRA).read_bytes().replace(
+            b"Weak Attack,Medium Attack,Strong Attack,Throw", b"Attack 1,Attack 2,Attack 3,Attack 4")
+        with self.assertRaisesRegex(AssertionError, "Control card"):
+            verify_mra_metadata(data)
+
+    def test_wrong_nvram_size_or_channel_is_rejected(self):
+        data = (ROOT / "mra" / MRA).read_bytes()
+        for replacement in (b'<nvram index="254" size="128" />', b'<nvram index="4" size="64" />', b''):
+            with self.subTest(replacement=replacement), self.assertRaisesRegex(AssertionError, "NVRAM"):
+                verify_mra_metadata(data.replace(b'<nvram index="4" size="128" />', replacement))
+
 
 class CleanupTests(unittest.TestCase):
     def test_cleanup_is_anchored_to_project(self):

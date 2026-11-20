@@ -1,6 +1,6 @@
 param(
     [ValidatePattern('^\d+\.\d+\.\d+$')]
-    [string]$Version = '1.0.6',
+    [string]$Version = '1.0.7',
     [string]$OutputDirectory
 )
 # OpenAI Codex and kandowontu; SPDX-License-Identifier: GPL-3.0-or-later
@@ -25,9 +25,11 @@ foreach ($type in @('Setup', 'Hold', 'Recovery', 'Removal', 'Minimum Pulse Width
 $audit = Get-Content -LiteralPath (Join-Path $build 'sdram-f0-audit.log') -Raw
 if ($audit -notmatch 'PASS: sixteen fixed F0 input captures' -or $audit -match '(?m)^Error') { throw 'Fitted F0 audit failed' }
 $tests = Get-Content -LiteralPath (Join-Path $build "v$Version-tests.log") -Raw
-if ([regex]::Matches($tests, '(?m)^[^\r\n]*PASS').Count -ne 23 -or
+if ([regex]::Matches($tests, '(?m)^[^\r\n]*PASS').Count -ne 25 -or
     $tests -match '(?im)^(FATAL:|FAIL(?:ED)?\b|Exception:)') { throw 'Production regressions did not pass' }
-if ((Get-Content -LiteralPath (Join-Path $root 'docs/RELEASE_VALIDATION.md') -Raw) -match 'compile and fitted-register audit are pending') {
+$validation = Get-Content -LiteralPath (Join-Path $root 'docs/RELEASE_VALIDATION.md') -Raw
+if ($validation -notmatch ('^# v' + [regex]::Escape($Version) + ' release validation') -or
+    $validation -match 'compile and fitted-register audit are pending') {
     throw 'Validation documentation is incomplete'
 }
 $manifest = Get-Content -LiteralPath (Join-Path $build "v$Version-fitted-source.json") -Raw | ConvertFrom-Json

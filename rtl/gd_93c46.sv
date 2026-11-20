@@ -1,7 +1,7 @@
 // 93C46 Microwire EEPROM in 64 x 16-bit organization.
 // Gundam EX Revue connects DI, SK, CS and DO to TMP68301 parallel-port bits
 // 0, 1, 2 and 3 respectively. The MRA supplies the board's 128-byte factory
-// image; writes remain valid until the core is reloaded.
+// image; gd_eeprom_nvram restores/saves the persistent image through MiSTer.
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 module gd_93c46
@@ -11,6 +11,10 @@ module gd_93c46
 	input  logic       load_wr,
 	input  logic [6:0] load_addr,
 	input  logic [7:0] load_data,
+	input  logic       save_snapshot,
+	input  logic [6:0] save_addr,
+	output logic [7:0] save_data,
+	output logic       wrote,
 	input  logic       chip_select,
 	input  logic       serial_clock,
 	input  logic       data_in,
@@ -22,6 +26,11 @@ typedef enum logic [2:0] {
 } eeprom_state_t;
 
 (* ramstyle = "MLAB" *) logic [15:0] memory [0:63];
+// Freeze the whole image on upload start. A game write during transfer must
+// request another save, never splice two EEPROM generations in one .nvm.
+logic [15:0] snapshot [0:63];
+assign save_data = save_addr[0] ? snapshot[save_addr[6:1]][7:0]
+	: snapshot[save_addr[6:1]][15:8];
 eeprom_state_t state;
 logic chip_select_d;
 logic serial_clock_d;
@@ -42,6 +51,9 @@ initial begin
 end
 
 always_ff @(posedge clk) begin
+	wrote <= 1'b0;
+	if (save_snapshot)
+		for (integer n = 0; n < 64; n = n + 1) snapshot[n] <= memory[n];
 	chip_select_d <= chip_select;
 	serial_clock_d <= serial_clock;
 
@@ -101,8 +113,10 @@ always_ff @(posedge clk) begin
 									state <= EEP_WRITE;
 								end
 								2'b11: begin // ERASE
-									if (write_enabled)
+									if (write_enabled) begin
 										memory[completed_command[5:0]] <= 16'hffff;
+										wrote <= 1'b1;
+									end
 									data_out <= 1'b1;
 									state <= EEP_DONE;
 								end
@@ -113,6 +127,7 @@ always_ff @(posedge clk) begin
 										2'b10: if (write_enabled) begin // ERAL
 											for (index = 0; index < 64; index = index + 1)
 												memory[index] <= 16'hffff;
+											wrote <= 1'b1;
 										end
 										default: begin // WRAL
 											data_shift <= 16'd0;
@@ -137,8 +152,10 @@ always_ff @(posedge clk) begin
 				EEP_WRITE: begin
 					data_shift <= {data_shift[14:0], data_in};
 					if (data_bits == 5'd15) begin
-						if (write_enabled)
+						if (write_enabled) begin
 							memory[word_address] <= {data_shift[14:0], data_in};
+							wrote <= 1'b1;
+						end
 						data_out <= 1'b1;
 						state <= EEP_DONE;
 					end
@@ -151,6 +168,7 @@ always_ff @(posedge clk) begin
 						if (write_enabled) begin
 							for (index = 0; index < 64; index = index + 1)
 								memory[index] <= {data_shift[14:0], data_in};
+							wrote <= 1'b1;
 						end
 						data_out <= 1'b1;
 						state <= EEP_DONE;

@@ -83,7 +83,8 @@ module crt_vsize #(
     output reg          vs_out,
     output reg          de_out,
     output reg          vb_out,
-    output reg          ce_out      // output pixel CE (native period, retimed grid)
+    output reg          ce_out,     // output pixel CE (native period, retimed grid)
+    output wire [9:0]   frame_lines // active output frame length for downstream V-Shift
 );
 
     // ------------------------------------------------------------------
@@ -372,6 +373,9 @@ module crt_vsize #(
                      && meas_ok && meas_ok_prev;
     wire tube_on   = active &&  tube_mode && vsize_req
                      && meas_ok && meas_ok_prev && (a_out_t > 10'd32);
+    // Use the same latched total as the running retimer, not the requested
+    // size (which slews one line per frame). Cabinet and bypass stay native.
+    assign frame_lines = engine_on ? lines_out : lines_nat;
 
     reg  [5:0]  start_cnt;      // native hs_rise counter after vs_rise
     reg         out_running;    // output frame in progress

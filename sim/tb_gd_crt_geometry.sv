@@ -21,6 +21,8 @@ localparam integer FRAME_CLOCKS=512*256*8;
 integer visible_pixels=0, unknown_pixels=0, lit_pixels=0;
 integer hs_high=0, vs_high=0;
 integer mode_index, size_index;
+integer output_lines=0, sampled_line=0, expected_vs=0;
+logic sampled_hs=0, sampled_vs=0;
 
 always @(negedge clk_sys) begin
     if (!reset) begin
@@ -40,6 +42,12 @@ always @(negedge clk_sys) begin
             else if ({video_red,video_green,video_blue} != 24'd0) lit_pixels=lit_pixels+1;
         end
     end
+    // The signed offset must wrap using the total selected by the upstream
+    // mode (including the PVM per-frame slew), not a constant native total.
+    if (dut.crt_horizontal.active_frame_lines !==
+        (dut.crt_vertical.engine_on ? dut.crt_vertical.lines_out :
+         ((dut.crt_vertical.lines_nat==0) ? 10'd256 : dut.crt_vertical.lines_nat)))
+        $fatal(1,"CRT frame length sideband mismatch");
 end
 
 task frame;
@@ -86,13 +94,44 @@ initial begin
             $display("CRT case mode=%0d size=%0d visible=%0d lit=%0d",tube_mode,crt_vsize,visible_pixels,lit_pixels);
         end
     end
+    // Reproduce the review report through both actual geometry stages.
+    // +3 in the OSD maps to -9 lines; allow the one-line/frame slew to settle.
+    @(posedge clk_sys); #1;
+    crt_geometry=1; tube_mode=0; crt_vsize=-9; crt_vshift=-1;
+    repeat(21) frame();
+    if(dut.crt_vertical.lines_out!==247 || dut.crt_horizontal.vshift_tap!==246)
+        $fatal(1,"PVM +3/-1 did not select 247-line frame and tap 246");
+    // Count the stream's HSync edges from one upstream VSync to the next.
+    sampled_hs=dut.crt_vz_hsync; sampled_vs=dut.crt_vz_vsync;
+    while (!(dut.crt_vz_vsync && !sampled_vs)) begin
+        sampled_hs=dut.crt_vz_hsync; sampled_vs=dut.crt_vz_vsync;
+        @(negedge clk_sys);
+    end
+    sampled_hs=dut.crt_vz_hsync;
+    sampled_line=0; output_lines=0;
+    repeat(FRAME_CLOCKS+128) begin
+        @(negedge clk_sys);
+        if(dut.crt_vz_hsync && !sampled_hs) begin
+            sampled_line=sampled_line+1;
+            output_lines=output_lines+1;
+        end
+        // Well inside each input line, past the registered output latency.
+        if(dut.crt_vertical.o_cline==100) begin
+            expected_vs=(((sampled_line+1)%247)<4);
+            if(video_vsync !== (expected_vs!=0))
+                $fatal(1,"Actual PVM -1 offset line=%0d vs=%b expected=%b",sampled_line,video_vsync,expected_vs!=0);
+        end
+        sampled_hs=dut.crt_vz_hsync;
+    end
+    if(output_lines!=247) $fatal(1,"PVM stream has %0d lines, expected 247",output_lines);
+    $display("CRT PVM +3/-1 settled: 247 output lines, sync advanced one line");
     @(posedge clk_sys); #1; crt_geometry=0;
     check_picture();
     $display("PASS gd_crt_geometry real 512x256 raster, positive sync, bypass/PVM/Cabinet zero/enlarge/shrink");
     $finish;
 end
 initial begin
-    #220000000;
+    #500000000;
     $fatal(1,"CRT geometry timeout");
 end
 endmodule

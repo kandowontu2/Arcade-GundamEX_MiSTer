@@ -80,3 +80,10 @@ were adapted from the related Guardians project by OpenAI Codex and
 kandowontu (GPL-3.0-or-later). The memory-capture investigation was conducted
 with Fluxxant's hardware tests; provenance and evidence are recorded in
 `UPSTREAM.md` and `docs/SDRAM_COMPATIBILITY.md`.
+
+## EEPROM persistence
+
+The 128-byte EEPROM persistence controller and its protocol regression are
+original project RTL/tests by OpenAI Codex and kandowontu (GPL-3.0-or-later).
+They use the standard MiSTer Main arcade NVRAM interface; no external EEPROM
+implementation or vendor simulation library was copied for this feature.

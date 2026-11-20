@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.0.7 - 2026-11-19
+
+- Use the active PVM frame total for negative V Offset wrap, including size
+  slew and both extremes (247/265 lines), instead of a fixed 256-line total.
+- Label the four action buttons Weak Attack, Medium Attack, Strong Attack,
+  and Throw in both MRAs and the core's fallback control description.
+- Add standard 128-byte MiSTer NVRAM EEPROM persistence, with staged restore
+  after factory-ROM replay, atomic save snapshots, dirty tracking for all
+  write/erase commands, and retry requests after writes during upload.
+- Add actual HPS-protocol EEPROM roundtrip and 48-case signed-offset tests.
+- Confirm all 128 EEPROM bytes on the user's MiSTer through real CPU writes,
+  automatic OSD saves and two Menu-core/relaunch cycles using the release RBF.
+- Include reproducible build/test instructions, exact-fit validation and a
+  maintainer review guide. No framework refresh or upstream PR in this release.
+
 ## 1.0.6 - 2026-10-30
 
 - Normalize native active-low H/V sync to active-high pulses at the CRT

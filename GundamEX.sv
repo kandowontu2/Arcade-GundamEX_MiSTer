@@ -53,9 +53,9 @@ localparam CONF_STR = {
 	"-;",
 	"T[0],Reset;",
 	"R[0],Reset and close OSD;",
-	"J1,Attack 1,Attack 2,Attack 3,Attack 4,Start,Coin,Service;",
+	"J1,Weak Attack,Medium Attack,Strong Attack,Throw,Start,Coin,Service;",
 	"jn,A,B,X,Y,Start,Select,R;",
-	"v,1.0.6;",
+	"v,1.0.7;",
 	"V,v",`BUILD_DATE
 };
 
@@ -64,6 +64,8 @@ wire [21:0] gamma_bus;
 wire [1:0] buttons;
 wire [127:0] status;
 wire ioctl_download;
+wire ioctl_upload, ioctl_rd, nvram_upload_req;
+wire [7:0] nvram_din;
 wire ioctl_wr;
 wire [26:0] ioctl_addr;
 wire [7:0] ioctl_dout;
@@ -78,6 +80,8 @@ hps_io #(.CONF_STR(CONF_STR)) hps_io
 (
 	.clk_sys(clk_sys), .HPS_BUS(HPS_BUS), .EXT_BUS(), .gamma_bus,
 	.forced_scandoubler, .buttons, .status, .ioctl_download,
+	.ioctl_upload, .ioctl_rd, .ioctl_din(nvram_din),
+	.ioctl_upload_req(nvram_upload_req), .ioctl_upload_index(8'd4),
 	.ioctl_wr, .ioctl_addr, .ioctl_dout, .ioctl_index, .ioctl_wait,
 	.joystick_0, .joystick_1, .joystick_l_analog_0,
 	.joystick_l_analog_1
@@ -191,6 +195,10 @@ gd_core core
 	.rom_downloading(ioctl_download && (ioctl_index == 16'd0)),
 	.rom_wr(ioctl_wr && (ioctl_index == 16'd0)),
 	.rom_addr(ioctl_addr), .rom_data(ioctl_dout), .rom_wait(ioctl_wait),
+	.nvram_download(ioctl_download), .nvram_upload(ioctl_upload),
+	.nvram_wr(ioctl_wr), .nvram_rd(ioctl_rd), .nvram_index(ioctl_index),
+	.nvram_addr(ioctl_addr), .nvram_dout(ioctl_dout),
+	.nvram_din, .nvram_upload_req,
 	.ddr_clk(DDRAM_CLK), .ddr_busy(DDRAM_BUSY),
 	.ddr_burstcount(DDRAM_BURSTCNT), .ddr_addr(DDRAM_ADDR),
 	.ddr_dout(DDRAM_DOUT), .ddr_dout_ready(DDRAM_DOUT_READY),
